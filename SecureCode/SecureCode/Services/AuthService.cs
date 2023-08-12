@@ -131,11 +131,6 @@ namespace SecureCode.Services
             var user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
                 throw new Exception("User doesn't exist.");
 
-            if (!user.Password.Equals(resetPasswordDto.OldPassword))
-            {
-                throw new Exception("Wrong old password.");
-            }
-
             if (!user.PasswordResetCode.Equals(resetPasswordDto.Code))
             {
                 throw new Exception("Invalid code.");
