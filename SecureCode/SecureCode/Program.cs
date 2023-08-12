@@ -8,7 +8,9 @@ using SecureCode.Infrastructure.Providers;
 using SecureCode.Interfaces.IProviders;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Mapping;
+using SecureCode.Models;
 using SecureCode.Services;
+using SecureCode.Services.Helpers;
 using System;
 using System.Text;
 
@@ -61,6 +63,7 @@ builder.Services.AddScoped<DbContext, SecureDbContext>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
+builder.Services.AddScoped<ITotpService, TotpService>();
 
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>
@@ -69,6 +72,12 @@ var mapperConfig = new MapperConfiguration(mc =>
 });
 IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
+
+//totp
+builder.Services.AddOptions<TotpOptions>()
+    .Bind(builder.Configuration.GetRequiredSection(TotpOptions.TOTP))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 //cors
 builder.Services.AddCors(o =>

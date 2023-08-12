@@ -14,9 +14,6 @@ namespace SecureCode.Models
         public string? Salt { get; set; } = null;
         public string? VerificatonCode { get; set; } = null;
         public DateTime? VerifiedAt { get; set; } = null;
-        public string? PasswordResetCode { get; set; } = null;
-        public DateTime? ResetCodeExpires { get; set; } = null;
-        public string? LoginCode { get; set; } = null;
-        public DateTime? LoginCodeExpires { get; set; } = null;
+        public string? TotpSecretKey { get; set; } = null;
     }
 }

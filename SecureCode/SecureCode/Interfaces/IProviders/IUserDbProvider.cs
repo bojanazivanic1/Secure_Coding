@@ -8,6 +8,6 @@ namespace SecureCode.Interfaces.IProviders
         Task<User?> FindUserByEmailAsync(string email);
         Task<User?> FindUserByIdAsync(int id);
         Task<bool> SaveChanges();
-        Task<bool> UpdateUser(User? user);
+        Task<bool> UpdateUser(User user);
     }
 }

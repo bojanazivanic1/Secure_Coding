@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using Azure;
-using Microsoft.AspNetCore.Identity;
+using Google.Authenticator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SecureCode.DTO;
@@ -9,27 +8,30 @@ using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net.NetworkInformation;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace SecureCode.Services
 {
     public class AuthService : IAuthService
     {
-        private static IUserDbProvider? _userDbProvider;
-        private static IEmailService? _emailService;
-        private readonly IConfiguration? _configuration;
+        private static IUserDbProvider _userDbProvider;
+        private static IEmailService _emailService;
+        private static ITotpService _totpService;
+        private readonly IConfiguration _configuration;
         private readonly IMapper? _mapper;
 
-        public AuthService(IConfiguration? configuration, 
-                            IMapper? mapper, 
-                            IUserDbProvider? userDbProvider, 
-                            IEmailService? emailService)
+        public AuthService(IConfiguration configuration, 
+                            IMapper mapper, 
+                            IUserDbProvider userDbProvider, 
+                            IEmailService emailService,
+                            ITotpService totpService)
         {
             _configuration = configuration;
             _mapper = mapper;
             _userDbProvider = userDbProvider;
             _emailService = emailService;
+            _totpService = totpService;
         }
 
         public async Task<bool> RegisterUserAsync(RegisterUserDto registerUserDto)
@@ -44,8 +46,8 @@ namespace SecureCode.Services
 
             user.Salt = BCrypt.Net.BCrypt.GenerateSalt();
             user.Password = CreatePasswordHash(registerUserDto.Password, user.Salt);
-
-            user.VerificatonCode = CreateRandomCode();
+            user.VerificatonCode = Math.Abs(Guid.NewGuid().GetHashCode()).ToString().Substring(0, 6);
+            user.TotpSecretKey = GenerateRandomKey();
 
             await _userDbProvider.AddUserAsync(user);
 
@@ -66,7 +68,61 @@ namespace SecureCode.Services
 
             return await _userDbProvider.SaveChanges(); ;
         }
+        
+        public async Task<TotpSetup> LoginUserAsync(LoginUserDto loginUserDto)
+        {
+            User? user = await _userDbProvider.FindUserByEmailAsync(loginUserDto.Email) ??
+                throw new Exception("User not found.");
 
+            if (!VerifyPasswordHash(loginUserDto.Password, user.Password, user.Salt))
+            {
+                throw new Exception("Wrong password.");
+            }
+
+            if (user.VerifiedAt == null)
+            {
+                throw new Exception("Not verified!");
+            }
+
+            return _totpService.Generate("Sec-login", user.Email, user.TotpSecretKey);
+        }
+        public async Task<string> LoginConfirmAsync(CodeDto codeDto)
+        {
+            User? user = await _userDbProvider.FindUserByEmailAsync(codeDto.Email) ??
+                throw new Exception("User doesn't exist.");
+
+            if (!_totpService.Validate(user.TotpSecretKey, int.Parse(codeDto.Code)))
+            {
+                throw new Exception("Code is not valid!");
+            }               
+
+            return CreateToken(user);
+        }
+        public async Task<TotpSetup> ResetPasswordRequestAsync(EmailDto emailDto)
+        {
+            User? user = await _userDbProvider.FindUserByEmailAsync(emailDto.Email) ??
+                throw new Exception("User not found.");
+
+            return _totpService.Generate("Sec-password", user.Email, user.TotpSecretKey);
+        }
+
+        public async Task<bool> ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
+        {
+            var user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
+                throw new Exception("User doesn't exist.");
+
+            if (!_totpService.Validate(user.TotpSecretKey, int.Parse(resetPasswordDto.Code)))
+            {
+                throw new Exception("Code is not valid!");
+            }
+
+            user.Password = CreatePasswordHash(resetPasswordDto.Password, user.Salt);
+
+            return await _userDbProvider.SaveChanges(); ;
+        }
+
+        #region sending email for 2fa
+        /*
         public async Task<bool> LoginUserAsync(LoginUserDto loginUserDto)
         {
             User? user = await _userDbProvider.FindUserByEmailAsync(loginUserDto.Email) ??
@@ -89,7 +145,6 @@ namespace SecureCode.Services
 
             return await Send2FACodeByEmailAsync(user.Email, user.LoginCode);
         }
-
         public async Task<string> LoginConfirmAsync(CodeDto codeDto)
         {
             User? user = await _userDbProvider.FindUserByEmailAsync(codeDto.Email) ??
@@ -112,7 +167,6 @@ namespace SecureCode.Services
 
             return CreateToken(user);
         }
-
         public async Task<bool> ResetPasswordRequestAsync(EmailDto emailDto)
         {
             User? user = await _userDbProvider.FindUserByEmailAsync(emailDto.Email) ??
@@ -125,7 +179,6 @@ namespace SecureCode.Services
 
             return await Send2FACodeByEmailAsync(user.Email, user.PasswordResetCode);
         }
-
         public async Task<bool> ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
         {
             var user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
@@ -148,11 +201,8 @@ namespace SecureCode.Services
 
             return await _userDbProvider.SaveChanges(); ;
         }
-
-        private string? CreateRandomCode()
-        {
-            return Math.Abs(Guid.NewGuid().GetHashCode()).ToString().Substring(0, 6);
-        }
+        */
+        #endregion
 
         public string CreatePasswordHash(string password, string salt)
         {
@@ -199,6 +249,18 @@ namespace SecureCode.Services
             catch (Exception ex)
             {
                 throw new Exception("Failed to send 2FA code.\n" + ex.Message);
+            }
+        }
+
+        private string GenerateRandomKey(int length = 20)
+        {
+            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                byte[] bytes = new byte[length];
+                rng.GetBytes(bytes);
+                var chars = bytes.Select(b => validChars[b % validChars.Length]);
+                return new string(chars.ToArray());
             }
         }
     }

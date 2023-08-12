@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SecureCode.DTO;
 using SecureCode.Interfaces.IServices;
+using SecureCode.Models;
 
 namespace SecureCode.Controllers
 {
@@ -37,8 +37,8 @@ namespace SecureCode.Controllers
         [HttpPost("login")]
         public async Task<ActionResult> LoginAsync(LoginUserDto request)
         {
-            await authService.LoginUserAsync(request);
-            return Ok();
+            TotpSetup totp = await authService.LoginUserAsync(request);
+            return Ok(totp);
         }
 
         [AllowAnonymous]
@@ -49,15 +49,15 @@ namespace SecureCode.Controllers
             return Ok(token);
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("reset-password")]
         public async Task<ActionResult> ResetPasswordRequestAsync(EmailDto request)
         {
-            await authService.ResetPasswordRequestAsync(request);
-            return Ok();
+            TotpSetup totp = await authService.ResetPasswordRequestAsync(request);
+            return Ok(totp);
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("confirm-password")]
         public async Task<ActionResult> ResetPasswordConfirmAsync(ResetPasswordDto request)
         {
