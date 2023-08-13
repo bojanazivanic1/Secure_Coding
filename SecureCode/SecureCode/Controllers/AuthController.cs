@@ -49,7 +49,7 @@ namespace SecureCode.Controllers
             return Ok(token);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("reset-password")]
         public async Task<ActionResult> ResetPasswordRequestAsync(EmailDto request)
         {
@@ -57,7 +57,7 @@ namespace SecureCode.Controllers
             return Ok(totp);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("confirm-password")]
         public async Task<ActionResult> ResetPasswordConfirmAsync(ResetPasswordDto request)
         {
