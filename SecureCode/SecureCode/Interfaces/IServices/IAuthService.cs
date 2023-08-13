@@ -6,10 +6,10 @@ namespace SecureCode.Interfaces.IServices
 {
     public interface IAuthService
     {
-        Task<bool> RegisterUserAsync(RegisterUserDto request);
-        Task<bool> ConfirmEmailAsync(CodeDto enteredCode);
+        Task RegisterUserAsync(RegisterUserDto request);
+        Task ConfirmEmailAsync(CodeDto enteredCode);
         Task<TotpSetup> ResetPasswordRequestAsync(EmailDto request);
-        Task<bool> ResetPasswordConfirmAsync(ResetPasswordDto request);
+        Task ResetPasswordConfirmAsync(ResetPasswordDto request);
         Task<TotpSetup> LoginUserAsync(LoginUserDto request);
         Task<string> LoginConfirmAsync(CodeDto codeDto);
     }

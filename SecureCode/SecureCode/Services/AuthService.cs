@@ -34,7 +34,7 @@ namespace SecureCode.Services
             _totpService = totpService;
         }
 
-        public async Task<bool> RegisterUserAsync(RegisterUserDto registerUserDto)
+        public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
         {
             User? user = await _userDbProvider.FindUserByEmailAsync(registerUserDto.Email);
             if(user != null)
@@ -51,10 +51,10 @@ namespace SecureCode.Services
 
             await _userDbProvider.AddUserAsync(user);
 
-            return await Send2FACodeByEmailAsync(user.Email, user.VerificatonCode);
+            await Send2FACodeByEmailAsync(user.Email, user.VerificatonCode);
         }
 
-        public async Task<bool> ConfirmEmailAsync(CodeDto codeDto)
+        public async Task ConfirmEmailAsync(CodeDto codeDto)
         {
             User? user = await _userDbProvider.FindUserByEmailAsync(codeDto.Email) ??
                 throw new Exception("User doesn't exist.");
@@ -66,7 +66,7 @@ namespace SecureCode.Services
 
             user.VerifiedAt = DateTime.Now;
 
-            return await _userDbProvider.SaveChanges(); ;
+            await _userDbProvider.SaveChanges(); ;
         }
         
         public async Task<TotpSetup> LoginUserAsync(LoginUserDto loginUserDto)
@@ -106,7 +106,7 @@ namespace SecureCode.Services
             return _totpService.Generate("Sec-password", user.Email, user.TotpSecretKey);
         }
 
-        public async Task<bool> ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
+        public async Task ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
         {
             var user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
                 throw new Exception("User doesn't exist.");
@@ -118,7 +118,7 @@ namespace SecureCode.Services
 
             user.Password = CreatePasswordHash(resetPasswordDto.Password, user.Salt);
 
-            return await _userDbProvider.SaveChanges(); ;
+            await _userDbProvider.SaveChanges(); ;
         }
 
         #region sending email for 2fa

@@ -22,7 +22,7 @@ namespace SecureCode.Controllers
         public async Task<ActionResult> RegisterAsync([FromForm] RegisterUserDto request)
         {
             await authService.RegisterUserAsync(request);
-            return Ok(request);
+            return Ok();
         }
 
         [AllowAnonymous]
