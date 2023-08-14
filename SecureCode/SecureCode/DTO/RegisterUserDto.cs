@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SecureCode.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace SecureCode.DTO
 {
@@ -12,5 +13,7 @@ namespace SecureCode.DTO
         public string? ConfirmPassword { get; set; }
         [Required(ErrorMessage = "Email is required!"), MaxLength(100), EmailAddress]
         public string? Email { get; set; }
+        [Required(ErrorMessage = "Role is required!")]
+        public EUserRole? UserRole { get; set; }
     }
 }

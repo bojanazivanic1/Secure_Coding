@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SecureCode.Models;
 
 namespace SecureCode.Infrastructure.Configurations
@@ -13,6 +14,7 @@ namespace SecureCode.Infrastructure.Configurations
             builder.HasIndex(x => x.Email).IsUnique();
             builder.Property(x => x.Password).IsRequired().HasMaxLength(100);
             builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            builder.Property(x => x.UserRole).IsRequired().HasConversion(new EnumToStringConverter<EUserRole>());
         }
     }
 }

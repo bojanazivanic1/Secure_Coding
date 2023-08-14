@@ -49,6 +49,11 @@ namespace SecureCode.Services
             user.VerificatonCode = Math.Abs(Guid.NewGuid().GetHashCode()).ToString().Substring(0, 6);
             user.TotpSecretKey = GenerateRandomKey();
 
+            if(user.UserRole == EUserRole.ADMIN)
+            {
+                throw new Exception("You cannot register like admin.");
+            }
+
             await _userDbProvider.AddUserAsync(user);
 
             await Send2FACodeByEmailAsync(user.Email, user.VerificatonCode);
@@ -218,8 +223,9 @@ namespace SecureCode.Services
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim("Email", user.Email),
                 new Claim("Id", user.Id.ToString()),
+                new Claim("Email", user.Email),
+                new Claim(ClaimTypes.Role, user.UserRole.ToString()),
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(

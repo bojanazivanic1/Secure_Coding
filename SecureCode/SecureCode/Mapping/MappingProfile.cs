@@ -9,6 +9,9 @@ namespace SecureCode.Mapping
         public MappingProfile()
         {
             CreateMap<User, RegisterUserDto>().ReverseMap();
+            CreateMap<User, GetUserDto>().ReverseMap();
+            CreateMap<Post, AddPostDto>().ReverseMap();
+            CreateMap<Post, GetPostDto>().ReverseMap();
         }
     }
 }

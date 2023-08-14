@@ -2,6 +2,7 @@
 
 namespace SecureCode.Models
 {
+    public enum EUserRole { ADMIN, MODERATOR, CONTRIBUTOR }
     public class User
     {
         public int Id { get; set; }
@@ -15,5 +16,9 @@ namespace SecureCode.Models
         public string? VerificatonCode { get; set; } = null;
         public DateTime? VerifiedAt { get; set; } = null;
         public string? TotpSecretKey { get; set; } = null;
+        [Required]
+        public EUserRole? UserRole { get; set; }
+        public DateTime? ModeratorVerifiedAt { get; set; } = null;
+        public List<Post>? Posts { get; set; }
     }
 }

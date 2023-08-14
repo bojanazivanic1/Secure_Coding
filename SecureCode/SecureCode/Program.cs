@@ -62,8 +62,10 @@ builder.Services.AddScoped<DbContext, SecureDbContext>();
 //services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
 builder.Services.AddScoped<ITotpService, TotpService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
+builder.Services.AddScoped<IPostDbProvider, PostDbProvider>();
 
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>
