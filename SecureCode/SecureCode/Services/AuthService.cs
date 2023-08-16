@@ -3,7 +3,7 @@ using Google.Authenticator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SecureCode.DTO;
-using SecureCode.Interfaces.IProviders;
+using SecureCode.Interfaces.IRepository;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
 using System;
@@ -15,53 +15,49 @@ namespace SecureCode.Services
 {
     public class AuthService : IAuthService
     {
-        private static IUserDbProvider _userDbProvider;
         private static IEmailService _emailService;
         private static ITotpService _totpService;
         private readonly IConfiguration _configuration;
-        private readonly IMapper? _mapper;
+        private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthService(IConfiguration configuration, 
                             IMapper mapper, 
-                            IUserDbProvider userDbProvider, 
                             IEmailService emailService,
-                            ITotpService totpService)
+                            ITotpService totpService,
+                            IUnitOfWork unitOfWork)
         {
             _configuration = configuration;
             _mapper = mapper;
-            _userDbProvider = userDbProvider;
             _emailService = emailService;
             _totpService = totpService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(registerUserDto.Email);
-            if(user != null)
-            {
-                throw new Exception("That username is already in use!");
-            }
+            if (registerUserDto.UserRole == EUserRole.ADMIN)
+                throw new Exception("You cannot register like admin.");
 
-            user = _mapper.Map<User>(registerUserDto);
+            if ((await _unitOfWork.Users.Get(x => x.Email == registerUserDto.Email)) != null)
+                throw new Exception("That username is already in use!");
+
+            User user = _mapper.Map<User>(registerUserDto);
 
             user.Salt = BCrypt.Net.BCrypt.GenerateSalt();
             user.Password = CreatePasswordHash(registerUserDto.Password, user.Salt);
             user.VerificatonCode = Math.Abs(Guid.NewGuid().GetHashCode()).ToString().Substring(0, 6);
             user.TotpSecretKey = GenerateRandomKey();
 
-            if(user.UserRole == EUserRole.ADMIN)
-            {
-                throw new Exception("You cannot register like admin.");
-            }
-
-            await _userDbProvider.AddUserAsync(user);
+            await _unitOfWork.Users.Add(user);
+            await _unitOfWork.Save();
 
             await Send2FACodeByEmailAsync(user.Email, user.VerificatonCode);
         }
 
         public async Task ConfirmEmailAsync(CodeDto codeDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(codeDto.Email) ??
+            User user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email) ??
                 throw new Exception("User doesn't exist.");
 
             if (!user.VerificatonCode.Equals(codeDto.Code))
@@ -71,12 +67,12 @@ namespace SecureCode.Services
 
             user.VerifiedAt = DateTime.Now;
 
-            await _userDbProvider.SaveChanges(); ;
+            await _unitOfWork.Save();
         }
         
         public async Task<TotpSetup> LoginUserAsync(LoginUserDto loginUserDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(loginUserDto.Email) ??
+            User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ??
                 throw new Exception("User not found.");
 
             if (!VerifyPasswordHash(loginUserDto.Password, user.Password, user.Salt))
@@ -93,7 +89,7 @@ namespace SecureCode.Services
         }
         public async Task<string> LoginConfirmAsync(CodeDto codeDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(codeDto.Email) ??
+            User user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email) ??
                 throw new Exception("User doesn't exist.");
 
             if (!_totpService.Validate(user.TotpSecretKey, int.Parse(codeDto.Code)))
@@ -105,7 +101,7 @@ namespace SecureCode.Services
         }
         public async Task<TotpSetup> ResetPasswordRequestAsync(EmailDto emailDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(emailDto.Email) ??
+            User? user = await _unitOfWork.Users.Get(x => x.Email == emailDto.Email) ??
                 throw new Exception("User not found.");
 
             return _totpService.Generate("Sec-password", user.Email, user.TotpSecretKey);
@@ -113,7 +109,7 @@ namespace SecureCode.Services
 
         public async Task ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
         {
-            var user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
+            var user = await _unitOfWork.Users.Get(x => x.Email == resetPasswordDto.Email) ??
                 throw new Exception("User doesn't exist.");
 
             if (!_totpService.Validate(user.TotpSecretKey, int.Parse(resetPasswordDto.Code)))
@@ -123,7 +119,7 @@ namespace SecureCode.Services
 
             user.Password = CreatePasswordHash(resetPasswordDto.Password, user.Salt);
 
-            await _userDbProvider.SaveChanges(); ;
+            await _unitOfWork.Save();
         }
 
         #region sending email for 2fa

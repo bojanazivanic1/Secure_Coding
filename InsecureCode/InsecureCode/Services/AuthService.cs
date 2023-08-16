@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using InsecureCode.DTO;
-using InsecureCode.Interfaces.IProviders;
+using InsecureCode.Interfaces.IRepository;
 using InsecureCode.Interfaces.IServices;
 using InsecureCode.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -13,35 +13,33 @@ namespace InsecureCode.Services
 {
     public class AuthService : IAuthService
     {
-        private static IUserDbProvider? _userDbProvider;
-        private readonly IConfiguration? _configuration;
-        private readonly IMapper? _mapper;
+        private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthService(IUserDbProvider userDbProvider, IConfiguration? configuration, IMapper? mapper)
+        public AuthService(IConfiguration configuration, IMapper mapper, IUnitOfWork unitOfWork)
         {
-            _userDbProvider = userDbProvider;
             _configuration = configuration;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<bool> RegisterUserAsync(RegisterUserDto registerUserDto)
+        public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(registerUserDto.Email);
-            if (user != null)
-            {
+            if ((await _unitOfWork.Users.Get(x => x.Email == registerUserDto.Email)) != null)
                 throw new Exception("That username is already in use!");
-            }                
 
-            user = _mapper.Map<User>(registerUserDto);
+            User user = _mapper.Map<User>(registerUserDto);
 
             user.Password = CreatePasswordHash(registerUserDto.Password);
 
-            return await _userDbProvider.AddUserAsync(user);
+            await _unitOfWork.Users.Add(user);
+            await _unitOfWork.Save();
         }
 
         public async Task<string> LoginUserAsync(LoginUserDto loginUserDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(loginUserDto.Email) ?? 
+            User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ?? 
                 throw new Exception("User not found.");
 
             if (!VerifyPasswordHash(loginUserDto.Password, user.Password))
@@ -51,17 +49,17 @@ namespace InsecureCode.Services
 
             return CreateToken(user);
         }
-        public async Task<bool> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+        public async Task ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
         {
-            User? user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
+            User user = await _unitOfWork.Users.Get(x => x.Email == resetPasswordDto.Email) ??
                 throw new Exception("User not found.");
 
             user.Password = CreatePasswordHash(resetPasswordDto.Password);
 
-            return await _userDbProvider.SaveChanges(); ;
+            await _unitOfWork.Users.Save();
         }
 
-        private string? CreatePasswordHash(string? password)
+        private string CreatePasswordHash(string password)
         {
             using (SHA1 sha1 = SHA1.Create())
             {

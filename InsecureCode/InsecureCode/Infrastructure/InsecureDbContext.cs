@@ -14,6 +14,7 @@ namespace InsecureCode.Infrastructure
 
             optionsBuilder.UseSqlServer(connectionString);
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

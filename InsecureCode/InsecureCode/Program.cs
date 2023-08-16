@@ -1,7 +1,7 @@
 using AutoMapper;
 using InsecureCode.Infrastructure;
-using InsecureCode.Infrastructure.Providers;
-using InsecureCode.Interfaces.IProviders;
+using InsecureCode.Infrastructure.Repository;
+using InsecureCode.Interfaces.IRepository;
 using InsecureCode.Interfaces.IServices;
 using InsecureCode.Mapping;
 using InsecureCode.Services;
@@ -30,33 +30,33 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-                  {
-                    {
-                      new OpenApiSecurityScheme
-                      {
-                        Reference = new OpenApiReference
-                          {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                          },
-                          Scheme = "oauth2",
-                          Name = "Bearer",
-                          In = ParameterLocation.Header,
-
-                        },
-                        new List<string>()
-                      }
-                    });
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                Type = ReferenceType.SecurityScheme,
+                Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
 });
 
 //database
 builder.Services.AddDbContext<InsecureDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("InsecureDbContext")));
 builder.Services.AddScoped<DbContext, InsecureDbContext>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 //services
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
 
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>

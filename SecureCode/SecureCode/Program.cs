@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SecureCode.Infrastructure;
-using SecureCode.Infrastructure.Providers;
-using SecureCode.Interfaces.IProviders;
+using SecureCode.Infrastructure.Repository;
+using SecureCode.Interfaces.IRepository;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Mapping;
 using SecureCode.Models;
@@ -58,14 +58,14 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<SecureDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SecureDbContext")));
 builder.Services.AddScoped<DbContext, SecureDbContext>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 //services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITotpService, TotpService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
-builder.Services.AddScoped<IPostDbProvider, PostDbProvider>();
 
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>

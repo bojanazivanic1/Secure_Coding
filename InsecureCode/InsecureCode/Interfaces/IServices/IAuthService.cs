@@ -4,8 +4,8 @@ namespace InsecureCode.Interfaces.IServices
 {
     public interface IAuthService
     {
-        Task<bool> RegisterUserAsync(RegisterUserDto request);
+        Task RegisterUserAsync(RegisterUserDto request);
         Task<string> LoginUserAsync(LoginUserDto request);
-        Task<bool> ResetPasswordAsync(ResetPasswordDto request);
+        Task ResetPasswordAsync(ResetPasswordDto request);
     }
 }
