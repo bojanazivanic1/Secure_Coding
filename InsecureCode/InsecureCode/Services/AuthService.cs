@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using InsecureCode.DTO;
+using InsecureCode.Exceptions;
 using InsecureCode.Interfaces.IRepository;
 using InsecureCode.Interfaces.IServices;
 using InsecureCode.Models;
@@ -27,7 +28,7 @@ namespace InsecureCode.Services
         public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
         {
             if ((await _unitOfWork.Users.Get(x => x.Email == registerUserDto.Email)) != null)
-                throw new Exception("That username is already in use!");
+                throw new BadRequestException("That username is already in use!");
 
             User user = _mapper.Map<User>(registerUserDto);
 
@@ -40,11 +41,11 @@ namespace InsecureCode.Services
         public async Task<string> LoginUserAsync(LoginUserDto loginUserDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ?? 
-                throw new Exception("User not found.");
+                throw new NotFoundException("User not found.");
 
             if (!VerifyPasswordHash(loginUserDto.Password, user.Password))
             {
-                throw new Exception("Wrong password.");
+                throw new NotFoundException("Wrong password.");
             }
 
             return CreateToken(user);
@@ -52,7 +53,7 @@ namespace InsecureCode.Services
         public async Task ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == resetPasswordDto.Email) ??
-                throw new Exception("User not found.");
+                throw new NotFoundException("User not found.");
 
             user.Password = CreatePasswordHash(resetPasswordDto.Password);
 

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using SecureCode.DTO;
+using SecureCode.Exceptions;
 using SecureCode.Interfaces.IRepository;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
@@ -20,6 +21,9 @@ namespace SecureCode.Services
 
         public async Task AddPostAsync(AddPostDto addPostDto, int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             Post post = _mapper.Map<Post>(addPostDto);
 
             post.ContributorId = userId;
@@ -28,40 +32,55 @@ namespace SecureCode.Services
             await _unitOfWork.Posts.Save();
         }
 
-        public async Task DeleteUserAsync(IdDto idDto)
+        public async Task DeleteUserAsync(IdDto idDto, int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             User user = await _unitOfWork.Users.Get(x => x.Id == idDto.Id) ?? 
-                throw new Exception("This user doesn't exists.");
+                throw new BadRequestException("This user doesn't exists.");
 
             _unitOfWork.Users.Delete(user);
             await _unitOfWork.Save();
         }
 
-        public async Task<List<GetPostDto>> GetAllPostsAsync()
+        public async Task<List<GetPostDto>> GetAllPostsAsync(int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             IList<Post> posts = await _unitOfWork.Posts.GetAll();
 
             return _mapper.Map<List<GetPostDto>>(posts);
         }
 
-        public async Task<List<GetUserDto>> GetUnverifiedModeratorsAsync()
+        public async Task<List<GetUserDto>> GetUnverifiedModeratorsAsync(int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             IList<User> moderators = await _unitOfWork.Users.GetAll(x=>x.UserRole==EUserRole.MODERATOR && x.ModeratorVerifiedAt == null);
 
             return _mapper.Map<List<GetUserDto>>(moderators);
         }
 
-        public async Task<List<GetPostDto>> GetVerifiedPostsAsync()
+        public async Task<List<GetPostDto>> GetVerifiedPostsAsync(int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             IList<Post> posts = await _unitOfWork.Posts.GetAll(x => x.MessageVerified);
 
             return _mapper.Map<List<GetPostDto>>(posts);
         }
 
-        public async Task VerifyModeratorAsync(IdDto idDto)
+        public async Task VerifyModeratorAsync(IdDto idDto, int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             User moderator = await _unitOfWork.Users.Get(x => x.Id == idDto.Id) ?? 
-                throw new Exception("Moderator with this ID doesn't exist.");
+                throw new BadRequestException("Moderator with this ID doesn't exist.");
 
             moderator.ModeratorVerifiedAt = DateTime.UtcNow;
 
@@ -69,10 +88,13 @@ namespace SecureCode.Services
             await _unitOfWork.Users.Save();
         }
 
-        public async Task VerifyPostAsync(IdDto idDto)
+        public async Task VerifyPostAsync(IdDto idDto, int userId)
         {
+            if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
+
             Post post = await _unitOfWork.Posts.Get(x => x.Id == idDto.Id) ??
-                throw new Exception("Post with this ID doesn't exist.");
+                throw new BadRequestException("Post with this ID doesn't exist.");
 
             post.MessageVerified = true;
 

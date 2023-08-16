@@ -1,5 +1,6 @@
 ﻿using Google.Authenticator;
 using QRCoder;
+using SecureCode.Exceptions;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
 using SecureCode.Services.Helpers;
@@ -40,7 +41,7 @@ namespace SecureCode.Services
             }
             catch (Exception exception)
             {
-                throw new HttpRequestException("Unexpected result from the Google QR web site.", exception);
+                throw new InternalServerErrorException("Unexpected result from the Google QR web site.\n" + exception);
             }
         }
 

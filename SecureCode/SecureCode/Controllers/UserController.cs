@@ -38,7 +38,7 @@ namespace SecureCode.Controllers
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new Exception("Bad ID. Logout and login.");
 
-            await _userService.VerifyPostAsync(request);
+            await _userService.VerifyPostAsync(request, userId);
 
             return Ok();
         }
@@ -50,7 +50,7 @@ namespace SecureCode.Controllers
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new Exception("Bad ID. Logout and login.");
 
-            List<GetUserDto> moderators = await _userService.GetUnverifiedModeratorsAsync();
+            List<GetUserDto> moderators = await _userService.GetUnverifiedModeratorsAsync(userId);
 
             return Ok(moderators);
         }
@@ -62,7 +62,7 @@ namespace SecureCode.Controllers
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new Exception("Bad ID. Logout and login.");
 
-            await _userService.VerifyModeratorAsync(request);
+            await _userService.VerifyModeratorAsync(request, userId);
 
             return Ok();
         }
@@ -74,7 +74,7 @@ namespace SecureCode.Controllers
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new Exception("Bad ID. Logout and login.");
 
-            List<GetPostDto> posts = await _userService.GetVerifiedPostsAsync();
+            List<GetPostDto> posts = await _userService.GetVerifiedPostsAsync(userId);
 
             return Ok(posts);
         }
@@ -86,7 +86,7 @@ namespace SecureCode.Controllers
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new Exception("Bad ID. Logout and login.");
 
-            List<GetPostDto> posts = await _userService.GetAllPostsAsync();
+            List<GetPostDto> posts = await _userService.GetAllPostsAsync(userId);
 
             return Ok(posts);
         }
@@ -98,7 +98,7 @@ namespace SecureCode.Controllers
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new Exception("Bad ID. Logout and login.");
 
-            await _userService.DeleteUserAsync(request);
+            await _userService.DeleteUserAsync(request, userId);
 
             return Ok();
         }

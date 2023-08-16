@@ -3,6 +3,7 @@ using Google.Authenticator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SecureCode.DTO;
+using SecureCode.Exceptions;
 using SecureCode.Interfaces.IRepository;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
@@ -37,10 +38,10 @@ namespace SecureCode.Services
         public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
         {
             if (registerUserDto.UserRole == EUserRole.ADMIN)
-                throw new Exception("You cannot register like admin.");
+                throw new UnauthorizedException("You cannot register like admin.");
 
             if ((await _unitOfWork.Users.Get(x => x.Email == registerUserDto.Email)) != null)
-                throw new Exception("That username is already in use!");
+                throw new BadRequestException("That email is already in use!");
 
             User user = _mapper.Map<User>(registerUserDto);
 
@@ -58,11 +59,11 @@ namespace SecureCode.Services
         public async Task ConfirmEmailAsync(CodeDto codeDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email) ??
-                throw new Exception("User doesn't exist.");
+                throw new BadRequestException("User doesn't exist.");
 
             if (!user.VerificatonCode.Equals(codeDto.Code))
             {
-                throw new Exception("Invalid code.");
+                throw new BadRequestException("Invalid code.");
             }
 
             user.VerifiedAt = DateTime.Now;
@@ -73,16 +74,16 @@ namespace SecureCode.Services
         public async Task<TotpSetup> LoginUserAsync(LoginUserDto loginUserDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ??
-                throw new Exception("User not found.");
+                throw new BadRequestException("User not found.");
 
             if (!VerifyPasswordHash(loginUserDto.Password, user.Password, user.Salt))
             {
-                throw new Exception("Wrong password.");
+                throw new BadRequestException("Wrong password.");
             }
 
             if (user.VerifiedAt == null)
             {
-                throw new Exception("Not verified!");
+                throw new UnauthorizedException("Not verified!");
             }
 
             return _totpService.Generate("Sec-login", user.Email, user.TotpSecretKey);
@@ -90,11 +91,11 @@ namespace SecureCode.Services
         public async Task<string> LoginConfirmAsync(CodeDto codeDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email) ??
-                throw new Exception("User doesn't exist.");
+                throw new BadRequestException("User doesn't exist.");
 
             if (!_totpService.Validate(user.TotpSecretKey, int.Parse(codeDto.Code)))
             {
-                throw new Exception("Code is not valid!");
+                throw new BadRequestException("Code is not valid!");
             }               
 
             return CreateToken(user);
@@ -102,7 +103,7 @@ namespace SecureCode.Services
         public async Task<TotpSetup> ResetPasswordRequestAsync(EmailDto emailDto)
         {
             User? user = await _unitOfWork.Users.Get(x => x.Email == emailDto.Email) ??
-                throw new Exception("User not found.");
+                throw new BadRequestException("User not found.");
 
             return _totpService.Generate("Sec-password", user.Email, user.TotpSecretKey);
         }
@@ -110,100 +111,17 @@ namespace SecureCode.Services
         public async Task ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
         {
             var user = await _unitOfWork.Users.Get(x => x.Email == resetPasswordDto.Email) ??
-                throw new Exception("User doesn't exist.");
+                throw new BadRequestException("User doesn't exist.");
 
             if (!_totpService.Validate(user.TotpSecretKey, int.Parse(resetPasswordDto.Code)))
             {
-                throw new Exception("Code is not valid!");
+                throw new BadRequestException("Code is not valid!");
             }
 
             user.Password = CreatePasswordHash(resetPasswordDto.Password, user.Salt);
 
             await _unitOfWork.Save();
         }
-
-        #region sending email for 2fa
-        /*
-        public async Task<bool> LoginUserAsync(LoginUserDto loginUserDto)
-        {
-            User? user = await _userDbProvider.FindUserByEmailAsync(loginUserDto.Email) ??
-                throw new Exception("User not found.");
-
-            if (!VerifyPasswordHash(loginUserDto.Password, user.Password, user.Salt))
-            {
-                throw new Exception("Wrong password.");
-            }
-
-            if(user.VerifiedAt == null)
-            {
-                throw new Exception("Not verified!");
-            }
-
-            user.LoginCode = CreateRandomCode();
-            user.LoginCodeExpires = DateTime.Now.AddMinutes(5);
-
-            await _userDbProvider.SaveChanges();
-
-            return await Send2FACodeByEmailAsync(user.Email, user.LoginCode);
-        }
-        public async Task<string> LoginConfirmAsync(CodeDto codeDto)
-        {
-            User? user = await _userDbProvider.FindUserByEmailAsync(codeDto.Email) ??
-                throw new Exception("User doesn't exist.");
-
-            if (!user.LoginCode.Equals(codeDto.Code))
-            {
-                throw new Exception("Invalid code.");
-            }
-
-            if (user.LoginCodeExpires < DateTime.Now)
-            {
-                throw new Exception("Code expired.");
-            }
-
-            user.PasswordResetCode = null;
-            user.ResetCodeExpires = null;
-
-            await _userDbProvider.SaveChanges();
-
-            return CreateToken(user);
-        }
-        public async Task<bool> ResetPasswordRequestAsync(EmailDto emailDto)
-        {
-            User? user = await _userDbProvider.FindUserByEmailAsync(emailDto.Email) ??
-                throw new Exception("User not found.");
-
-            user.PasswordResetCode = CreateRandomCode();
-            user.ResetCodeExpires = DateTime.Now.AddMinutes(5);
-
-            await _userDbProvider.SaveChanges();
-
-            return await Send2FACodeByEmailAsync(user.Email, user.PasswordResetCode);
-        }
-        public async Task<bool> ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
-        {
-            var user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email) ??
-                throw new Exception("User doesn't exist.");
-
-            if (!user.PasswordResetCode.Equals(resetPasswordDto.Code))
-            {
-                throw new Exception("Invalid code.");
-            }
-
-            if(user.ResetCodeExpires < DateTime.Now)
-            {
-                throw new Exception("Code expired.");
-            }
-
-            user.Salt = BCrypt.Net.BCrypt.GenerateSalt();
-            user.Password = CreatePasswordHash(resetPasswordDto.Password, user.Salt);
-            user.PasswordResetCode = null;
-            user.ResetCodeExpires = null;
-
-            return await _userDbProvider.SaveChanges(); ;
-        }
-        */
-        #endregion
 
         public string CreatePasswordHash(string password, string salt)
         {
@@ -250,7 +168,7 @@ namespace SecureCode.Services
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to send 2FA code.\n" + ex.Message);
+                throw new InternalServerErrorException("Failed to send 2FA code.\n" + ex.Message);
             }
         }
 

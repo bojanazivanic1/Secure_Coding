@@ -1,5 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 using MimeKit;
+using SecureCode.Exceptions;
 using SecureCode.Interfaces.IServices;
 
 namespace SecureCode.Services
@@ -29,9 +30,9 @@ namespace SecureCode.Services
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                throw new Exception("We cannot send email right now.\n" + ex.Message);
+                throw new InternalServerErrorException("We cannot send email right now.\n" + exception);
             }
 
             return true;
