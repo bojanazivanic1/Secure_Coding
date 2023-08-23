@@ -4,7 +4,7 @@ namespace SecureCode.DTO
 {
     public class IdDto
     {
-        [Required]
+        [Required(ErrorMessage = "Id is required!"), RegularExpression(@"^\d+$", ErrorMessage = "Value must be an integer.")]
         public int Id { get; set; }
     }
 }

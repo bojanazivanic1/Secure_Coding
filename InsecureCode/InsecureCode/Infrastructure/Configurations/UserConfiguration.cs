@@ -1,6 +1,7 @@
 ﻿using InsecureCode.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InsecureCode.Infrastructure.Configurations
 {
@@ -13,6 +14,7 @@ namespace InsecureCode.Infrastructure.Configurations
             builder.HasIndex(x => x.Email).IsUnique();
             builder.Property(x => x.Password).IsRequired().HasMaxLength(100);
             builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            builder.Property(x => x.UserRole).IsRequired().HasConversion(new EnumToStringConverter<EUserRole>());
         }
     }
 }

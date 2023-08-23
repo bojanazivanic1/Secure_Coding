@@ -4,7 +4,7 @@ namespace SecureCode.DTO
 {
     public class EmailDto
     {
-        [Required, EmailAddress, MaxLength(100)]
-        public string Email { get; set; }
+        [Required(ErrorMessage = "Email is required!"), MaxLength(100), EmailAddress]
+        public string? Email { get; set; }
     }
 }

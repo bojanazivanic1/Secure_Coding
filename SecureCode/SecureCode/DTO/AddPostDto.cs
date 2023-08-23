@@ -4,7 +4,7 @@ namespace SecureCode.DTO
 {
     public class AddPostDto
     {
-        [Required, MaxLength(200, ErrorMessage = "Message is too long.")]
+        [Required, MaxLength(1000, ErrorMessage = "Message is too long.")]
         public string? Message { get; set; }
     }
 }

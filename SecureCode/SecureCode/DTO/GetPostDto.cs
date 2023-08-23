@@ -9,7 +9,7 @@ namespace SecureCode.DTO
         public string? Message { get; set; }
         public bool MessageVerified { get; set; } = false;
 
-        [Required]
+        [Required(ErrorMessage = "Contributor Id is required!"), RegularExpression(@"^\d+$", ErrorMessage = "Value must be an integer.")]
         public int ContributorId { get; set; }
     }
 }
