@@ -1,16 +1,14 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using InsecureCode.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace InsecureCode.Models
+namespace InsecureCode.DTO
 {
-    public enum EUserRole { ADMIN, MODERATOR, CONTRIBUTOR }
-    public class User
+    public class GetUserDto
     {
         public int Id { get; set; }
         public string? Name { get; set; }
-        public string? Password { get; set; }
         public string? Email { get; set; }
-        [Required]
+        public DateTime? VerifiedAt { get; set; } = null;
         public EUserRole? UserRole { get; set; }
         public DateTime? ModeratorVerifiedAt { get; set; } = null;
         public List<Post>? Posts { get; set; }

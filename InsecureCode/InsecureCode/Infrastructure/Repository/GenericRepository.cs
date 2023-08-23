@@ -1,6 +1,5 @@
 ﻿using InsecureCode.Interfaces.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Linq.Expressions;
 
 namespace InsecureCode.Infrastructure.Repository

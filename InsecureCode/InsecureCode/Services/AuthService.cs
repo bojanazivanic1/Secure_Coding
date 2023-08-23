@@ -84,7 +84,7 @@ namespace InsecureCode.Services
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
-                _configuration.GetSection("JwtSettings:Token").Value));
+                _configuration.GetSection("JwtSettings:Token").Value!));
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["JwtSettings:Issuer"],

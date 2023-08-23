@@ -7,11 +7,13 @@ namespace InsecureCode.Infrastructure.Repository
     {
         readonly InsecureDbContext _dbContext;
         public IGenericRepository<User> Users { get; }
+        public IGenericRepository<Post> Posts { get; }
 
-        public UnitOfWork(InsecureDbContext dbContext, IGenericRepository<User> users)
+        public UnitOfWork(InsecureDbContext dbContext, IGenericRepository<User> users, IGenericRepository<Post> posts)
         {
             _dbContext = dbContext;
             Users = users;
+            Posts = posts;
         }
 
         public async Task Save()
