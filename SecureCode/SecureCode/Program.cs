@@ -120,6 +120,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SecureCode v1"));
 }
 
+//csp
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self';");
+    await next();
+});
+
 app.UseHttpsRedirection();
 app.UseCors("cors");
 

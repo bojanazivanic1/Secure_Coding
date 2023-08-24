@@ -2,6 +2,7 @@
 using Google.Authenticator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Security.Application;
 using SecureCode.DTO;
 using SecureCode.Exceptions;
 using SecureCode.Interfaces.IRepository;
@@ -44,6 +45,8 @@ namespace SecureCode.Services
                 throw new BadRequestException("That email is already in use!");
 
             User user = _mapper.Map<User>(registerUserDto);
+
+            user.Name = Sanitizer.GetSafeHtmlFragment(user.Name);
 
             user.Salt = BCrypt.Net.BCrypt.GenerateSalt();
             user.Password = CreatePasswordHash(registerUserDto.Password, user.Salt);

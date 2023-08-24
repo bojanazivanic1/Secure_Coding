@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.Security.Application;
 using SecureCode.DTO;
 using SecureCode.Exceptions;
 using SecureCode.Interfaces.IRepository;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
-using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace SecureCode.Services
 {
@@ -25,6 +25,8 @@ namespace SecureCode.Services
                 throw new BadRequestException("Error with id in token. Logout and login again");
 
             Post post = _mapper.Map<Post>(addPostDto);
+
+            post.Message = Sanitizer.GetSafeHtmlFragment(post.Message);
 
             post.ContributorId = userId;
 
