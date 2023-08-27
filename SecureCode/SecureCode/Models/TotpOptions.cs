@@ -6,8 +6,7 @@ namespace SecureCode.Models
     {
         public const string TOTP = "TOTP";
 
-        [Required]
-        [MinLength(16)]
-        public string Secret { get; set; }
+        [Required, MinLength(16)]
+        public string Secret { get; set; } = null!;
     }
 }

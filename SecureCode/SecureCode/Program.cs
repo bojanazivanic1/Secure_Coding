@@ -10,8 +10,6 @@ using SecureCode.Interfaces.IServices;
 using SecureCode.Mapping;
 using SecureCode.Models;
 using SecureCode.Services;
-using SecureCode.Services.Helpers;
-using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);

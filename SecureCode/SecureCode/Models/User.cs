@@ -13,12 +13,12 @@ namespace SecureCode.Models
         [Required(ErrorMessage = "Email is required!"), MaxLength(100), EmailAddress]
         public string? Email { get; set; }
         public string? Salt { get; set; } = null;
-        public string? VerificatonCode { get; set; } = null;
-        public DateTime? VerifiedAt { get; set; } = null;
-        public string? TotpSecretKey { get; set; } = null;
+        public string VerificatonCode { get; set; } = null!;
+        public DateTime VerifiedAt { get; set; } 
+        public string TotpSecretKey { get; set; } = null!;
         [Required(ErrorMessage = "Role is required!"), EnumDataType(typeof(EUserRole), ErrorMessage = "Invalid user role.")]
         public EUserRole? UserRole { get; set; }
-        public DateTime? ModeratorVerifiedAt { get; set; } = null;
+        public DateTime ModeratorVerifiedAt { get; set; }
         public List<Post>? Posts { get; set; }
     }
 }

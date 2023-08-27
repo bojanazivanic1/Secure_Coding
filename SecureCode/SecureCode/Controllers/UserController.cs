@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SecureCode.DTO;
+using SecureCode.Exceptions;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
 using System.Data;
+using System.Security.Claims;
 
 namespace SecureCode.Controllers
 {
@@ -21,10 +23,10 @@ namespace SecureCode.Controllers
 
         [Authorize(Roles = "CONTRIBUTOR")]
         [HttpPost("add-post")]
-        public async Task<ActionResult> AddPostAsync(AddPostDto request)
+        public async Task<ActionResult> AddPostAsync([FromForm] AddPostDto request)
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             await _userService.AddPostAsync(request, userId);
 
@@ -33,10 +35,10 @@ namespace SecureCode.Controllers
 
         [Authorize(Roles = "MODERATOR")]
         [HttpPost("verify-post")]
-        public async Task<ActionResult> VerifyPostAsync(IdDto request)
+        public async Task<ActionResult> VerifyPostAsync([FromForm] IdDto request)
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             await _userService.VerifyPostAsync(request, userId);
 
@@ -48,7 +50,7 @@ namespace SecureCode.Controllers
         public async Task<ActionResult> GetUnverifiedModeratorsAsync()
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             List<GetUserDto> moderators = await _userService.GetUnverifiedModeratorsAsync(userId);
 
@@ -57,10 +59,10 @@ namespace SecureCode.Controllers
 
         [Authorize(Roles = "ADMIN")]
         [HttpPost("verify-moderator")]
-        public async Task<ActionResult> VerifyMderatorAsync(IdDto request)
+        public async Task<ActionResult> VerifyMderatorAsync([FromForm] IdDto request)
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             await _userService.VerifyModeratorAsync(request, userId);
 
@@ -72,7 +74,7 @@ namespace SecureCode.Controllers
         public async Task<ActionResult> GetVerifiedPostsAsync()
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             List<GetPostDto> posts = await _userService.GetVerifiedPostsAsync(userId);
 
@@ -84,7 +86,7 @@ namespace SecureCode.Controllers
         public async Task<ActionResult> GetAllPostsAsync()
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             List<GetPostDto> posts = await _userService.GetAllPostsAsync(userId);
 
@@ -93,10 +95,10 @@ namespace SecureCode.Controllers
 
         [Authorize(Roles = "ADMIN")]
         [HttpDelete("delete-user/{userId}")]
-        public async Task<ActionResult> DeleteUserAsync(IdDto request)
+        public async Task<ActionResult> DeleteUserAsync([FromForm] IdDto request)
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+                throw new BadRequestException("Bad ID. Logout and login.");
 
             await _userService.DeleteUserAsync(request, userId);
 

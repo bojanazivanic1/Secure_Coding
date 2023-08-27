@@ -42,6 +42,9 @@ namespace SecureCode.Services
             User user = await _unitOfWork.Users.Get(x => x.Id == idDto.Id) ?? 
                 throw new BadRequestException("This user doesn't exists.");
 
+            if(user.Id == idDto.Id)
+                throw new BadRequestException("You cannot delete your own user account.");
+
             _unitOfWork.Users.Delete(user);
             await _unitOfWork.Save();
         }
@@ -61,7 +64,7 @@ namespace SecureCode.Services
             if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
                 throw new BadRequestException("Error with id in token. Logout and login again");
 
-            IList<User> moderators = await _unitOfWork.Users.GetAll(x=>x.UserRole==EUserRole.MODERATOR && x.ModeratorVerifiedAt == null);
+            IList<User> moderators = await _unitOfWork.Users.GetAll(x=>x.UserRole==EUserRole.MODERATOR && x.ModeratorVerifiedAt == default(DateTime));
 
             return _mapper.Map<List<GetUserDto>>(moderators);
         }
@@ -94,6 +97,11 @@ namespace SecureCode.Services
         {
             if ((await _unitOfWork.Users.Get(x => x.Id == userId)) == null)
                 throw new BadRequestException("Error with id in token. Logout and login again");
+
+            User user = await _unitOfWork.Users.Get(x => x.Id == userId);
+
+            if (user.UserRole == EUserRole.MODERATOR && user.ModeratorVerifiedAt == default(DateTime))
+                throw new BadRequestException("You need to be verified to verify a post.");
 
             Post post = await _unitOfWork.Posts.Get(x => x.Id == idDto.Id) ??
                 throw new BadRequestException("Post with this ID doesn't exist.");

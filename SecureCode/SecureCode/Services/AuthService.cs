@@ -17,8 +17,8 @@ namespace SecureCode.Services
 {
     public class AuthService : IAuthService
     {
-        private static IEmailService _emailService;
-        private static ITotpService _totpService;
+        private static IEmailService? _emailService;
+        private static ITotpService? _totpService;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
@@ -49,14 +49,14 @@ namespace SecureCode.Services
             user.Name = Sanitizer.GetSafeHtmlFragment(user.Name);
 
             user.Salt = BCrypt.Net.BCrypt.GenerateSalt();
-            user.Password = CreatePasswordHash(registerUserDto.Password, user.Salt);
+            user.Password = CreatePasswordHash(registerUserDto.Password!, user.Salt);
             user.VerificatonCode = Math.Abs(Guid.NewGuid().GetHashCode()).ToString().Substring(0, 6);
             user.TotpSecretKey = GenerateRandomKey();
 
             await _unitOfWork.Users.Add(user);
             await _unitOfWork.Save();
 
-            await Send2FACodeByEmailAsync(user.Email, user.VerificatonCode);
+            await Send2FACodeByEmailAsync(user.Email!, user.VerificatonCode);
         }
 
         public async Task ConfirmEmailAsync(CodeDto codeDto)
@@ -79,24 +79,24 @@ namespace SecureCode.Services
             User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ??
                 throw new BadRequestException("User not found.");
 
-            if (!VerifyPasswordHash(loginUserDto.Password, user.Password, user.Salt))
+            if (!VerifyPasswordHash(loginUserDto.Password!, user.Password!, user.Salt!))
             {
                 throw new BadRequestException("Wrong password.");
             }
 
-            if (user.VerifiedAt == null)
+            if (user.VerifiedAt == default(DateTime))
             {
                 throw new UnauthorizedException("Not verified!");
             }
 
-            return _totpService.Generate("Sec-login", user.Email, user.TotpSecretKey);
+            return _totpService!.Generate("Sec-login", user.Email!, user.TotpSecretKey);
         }
         public async Task<string> LoginConfirmAsync(CodeDto codeDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email) ??
                 throw new BadRequestException("User doesn't exist.");
 
-            if (!_totpService.Validate(user.TotpSecretKey, int.Parse(codeDto.Code)))
+            if (!_totpService!.Validate(user.TotpSecretKey, int.Parse(codeDto.Code!)))
             {
                 throw new BadRequestException("Code is not valid!");
             }               
@@ -108,7 +108,7 @@ namespace SecureCode.Services
             User? user = await _unitOfWork.Users.Get(x => x.Email == emailDto.Email) ??
                 throw new BadRequestException("User not found.");
 
-            return _totpService.Generate("Sec-password", user.Email, user.TotpSecretKey);
+            return _totpService!.Generate("Sec-password", user.Email!, user.TotpSecretKey);
         }
 
         public async Task ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
@@ -116,12 +116,12 @@ namespace SecureCode.Services
             var user = await _unitOfWork.Users.Get(x => x.Email == resetPasswordDto.Email) ??
                 throw new BadRequestException("User doesn't exist.");
 
-            if (!_totpService.Validate(user.TotpSecretKey, int.Parse(resetPasswordDto.Code)))
+            if (!_totpService!.Validate(user.TotpSecretKey, int.Parse(resetPasswordDto.Code!)))
             {
                 throw new BadRequestException("Code is not valid!");
             }
 
-            user.Password = CreatePasswordHash(resetPasswordDto.Password, user.Salt);
+            user.Password = CreatePasswordHash(resetPasswordDto.Password!, user.Salt!);
 
             await _unitOfWork.Save();
         }
@@ -141,8 +141,8 @@ namespace SecureCode.Services
             List<Claim> claims = new List<Claim>
             {
                 new Claim("Id", user.Id.ToString()),
-                new Claim("Email", user.Email),
-                new Claim(ClaimTypes.Role, user.UserRole.ToString()),
+                new Claim("Email", user.Email!),
+                new Claim(ClaimTypes.Role, user.UserRole.ToString()!),
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
@@ -166,7 +166,7 @@ namespace SecureCode.Services
                 string subject = "Authentication Code";
                 string body = $"Your 2FA code is: {code}";
 
-                await _emailService.SendEmail(email, subject, body);
+                await _emailService!.SendEmail(email, subject, body);
                 return true;
             }
             catch (Exception ex)
@@ -178,7 +178,7 @@ namespace SecureCode.Services
         private string GenerateRandomKey(int length = 20)
         {
             const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            using (var rng = new RNGCryptoServiceProvider())
+            using (var rng = RandomNumberGenerator.Create())
             {
                 byte[] bytes = new byte[length];
                 rng.GetBytes(bytes);
@@ -186,5 +186,6 @@ namespace SecureCode.Services
                 return new string(chars.ToArray());
             }
         }
+
     }
 }
