@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using InsecureCode.DTO;
 using InsecureCode.Exceptions;
-using InsecureCode.Interfaces.IRepository;
+using InsecureCode.Interfaces.IProviders;
 using InsecureCode.Interfaces.IServices;
 using InsecureCode.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -16,34 +16,33 @@ namespace InsecureCode.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserDbProvider _userDbProvider;
 
-        public AuthService(IConfiguration configuration, IMapper mapper, IUnitOfWork unitOfWork)
+        public AuthService(IConfiguration configuration, IMapper mapper, IUserDbProvider userDbProvider)
         {
             _configuration = configuration;
             _mapper = mapper;
-            _unitOfWork = unitOfWork;
+            _userDbProvider = userDbProvider;
         }
 
         public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
         {
-            if ((await _unitOfWork.Users.Get(x => x.Email == registerUserDto.Email)) != null)
+            if ((await _userDbProvider.FindUserByEmailAsync(registerUserDto.Email ?? "")) != null)
                 throw new BadRequestException("That username is already in use!");
 
             User user = _mapper.Map<User>(registerUserDto);
 
-            user.Password = CreatePasswordHash(registerUserDto.Password);
+            user.Password = CreatePasswordHash(registerUserDto.Password ?? "");
 
-            await _unitOfWork.Users.Add(user);
-            await _unitOfWork.Save();
+            await _userDbProvider.AddUserAsync(user);
         }
 
         public async Task<string> LoginUserAsync(LoginUserDto loginUserDto)
         {
-            User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ?? 
+            User user = await _userDbProvider.FindUserByEmailAsync(loginUserDto.Email ?? "") ?? 
                 throw new NotFoundException("User not found.");
 
-            if (!VerifyPasswordHash(loginUserDto.Password, user.Password))
+            if (!VerifyPasswordHash(loginUserDto.Password ?? "", user.Password ?? ""))
             {
                 throw new NotFoundException("Wrong password.");
             }
@@ -52,12 +51,12 @@ namespace InsecureCode.Services
         }
         public async Task ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
         {
-            User user = await _unitOfWork.Users.Get(x => x.Email == resetPasswordDto.Email) ??
+            User user = await _userDbProvider.FindUserByEmailAsync(resetPasswordDto.Email ?? "") ??
                 throw new NotFoundException("User not found.");
 
-            user.Password = CreatePasswordHash(resetPasswordDto.Password);
+            user.Password = CreatePasswordHash(resetPasswordDto.Password ?? "");
 
-            await _unitOfWork.Users.Save();
+            await _userDbProvider.UpdateUserAsync(user);
         }
 
         private string CreatePasswordHash(string password)
@@ -79,8 +78,9 @@ namespace InsecureCode.Services
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim("Email", user.Email),
+                new Claim("Email", user.Email ?? ""),
                 new Claim("Id", user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.UserRole.ToString() ?? ""),
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(

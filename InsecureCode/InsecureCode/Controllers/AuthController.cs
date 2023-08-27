@@ -1,9 +1,7 @@
 ﻿using InsecureCode.DTO;
 using InsecureCode.Interfaces.IServices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection.Metadata.Ecma335;
 
 namespace InsecureCode.Controllers
 {
@@ -28,7 +26,7 @@ namespace InsecureCode.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult> LoginAsync(LoginUserDto request)
+        public async Task<ActionResult> LoginAsync([FromForm] LoginUserDto request)
         {
             string token = await authService.LoginUserAsync(request);
             return Ok(token);
@@ -36,7 +34,7 @@ namespace InsecureCode.Controllers
 
         [AllowAnonymous]
         [HttpPost("reset-password")]
-        public async Task<ActionResult> ResetPasswordAsync(ResetPasswordDto request)
+        public async Task<ActionResult> ResetPasswordAsync([FromForm] ResetPasswordDto request)
         {
             await authService.ResetPasswordAsync(request);
             return Ok();

@@ -1,7 +1,6 @@
 ﻿using InsecureCode.DTO;
 using InsecureCode.Interfaces.IServices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 
@@ -20,21 +19,22 @@ namespace InsecureCode.Controllers
 
         [Authorize]
         [HttpPost("add-post")]
-        public async Task<ActionResult> AddPostAsync(AddPostDto request)
+        public async Task<ActionResult> AddPostAsync([FromForm] AddPostDto request)
         {
-            if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
-                throw new Exception("Bad ID. Logout and login.");
+            int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId);
 
             await _userService.AddPostAsync(request, userId);
 
             return Ok();
         }
 
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN, MODERATOR")]
         [HttpPost("verify-post")]
-        public async Task<ActionResult> VerifyPostAsync(IdDto request)
+        public async Task<ActionResult> VerifyPostAsync([FromForm] IdDto request)
         {
-            await _userService.VerifyPostAsync(request);
+            int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId);
+
+            await _userService.VerifyPostAsync(request, userId);
 
             return Ok();
         }
@@ -49,7 +49,7 @@ namespace InsecureCode.Controllers
         }
 
         [HttpPost("verify-moderator")]
-        public async Task<ActionResult> VerifyMderatorAsync(IdDto request)
+        public async Task<ActionResult> VerifyMderatorAsync([FromForm] IdDto request)
         {
             await _userService.VerifyModeratorAsync(request);
 
@@ -78,7 +78,9 @@ namespace InsecureCode.Controllers
         [HttpDelete("delete-user/{userId}")]
         public async Task<ActionResult> DeleteUserAsync(IdDto request)
         {
-            await _userService.DeleteUserAsync(request);
+            int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId);
+
+            await _userService.DeleteUserAsync(request, userId);
 
             return Ok();
         }

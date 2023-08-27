@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InsecureCode.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace InsecureCode.DTO
 {
@@ -8,5 +9,6 @@ namespace InsecureCode.DTO
         public string? Password { get; set; }
         public string? ConfirmPassword { get; set; }
         public string? Email { get; set; }
+        public EUserRole? UserRole { get; set; }
     }
 }

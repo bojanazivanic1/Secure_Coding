@@ -6,7 +6,7 @@ namespace InsecureCode.DTO
     {
         public int Id { get; set; }
         public string? Message { get; set; }
-        public bool MessageVerified { get; set; } = false;
+        public bool MessageVerified { get; set; }
         public int ContributorId { get; set; }
     }
 }

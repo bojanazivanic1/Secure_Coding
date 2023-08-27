@@ -1,13 +1,11 @@
 using AutoMapper;
 using InsecureCode.Infrastructure;
-using InsecureCode.Infrastructure.Repository;
-using InsecureCode.Interfaces.IRepository;
+using InsecureCode.Infrastructure.Providers;
+using InsecureCode.Interfaces.IProviders;
 using InsecureCode.Interfaces.IServices;
 using InsecureCode.Mapping;
 using InsecureCode.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -51,16 +49,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-//database
-builder.Services.AddDbContext<InsecureDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("InsecureDbContext")));
-builder.Services.AddScoped<DbContext, InsecureDbContext>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
 //services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
+builder.Services.AddScoped<IPostDbProvider, PostDbProvider>();
 
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>
@@ -78,7 +71,6 @@ builder.Services.AddCors(o =>
         p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
-
 
 //auth
 builder.Services.AddAuthentication(options =>
