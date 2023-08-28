@@ -78,9 +78,7 @@ namespace InsecureCode.Controllers
         [HttpDelete("delete-user/{userId}")]
         public async Task<ActionResult> DeleteUserAsync(IdDto request)
         {
-            int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId);
-
-            await _userService.DeleteUserAsync(request, userId);
+            await _userService.DeleteUserAsync(request);
 
             return Ok();
         }

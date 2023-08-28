@@ -42,8 +42,8 @@ namespace SecureCode.Services
             User user = await _unitOfWork.Users.Get(x => x.Id == idDto.Id) ?? 
                 throw new BadRequestException("This user doesn't exists.");
 
-            if(user.Id == idDto.Id)
-                throw new BadRequestException("You cannot delete your own user account.");
+            if(user.UserRole == EUserRole.ADMIN)
+                throw new BadRequestException("You cannot delete administrator's account.");
 
             _unitOfWork.Users.Delete(user);
             await _unitOfWork.Save();

@@ -5,7 +5,7 @@ namespace InsecureCode.Interfaces.IServices
     public interface IUserService
     {
         Task AddPostAsync(AddPostDto addPostDto, int userId);
-        Task DeleteUserAsync(IdDto idDto, int userId);
+        Task DeleteUserAsync(IdDto idDto);
         Task<List<GetPostDto>> GetAllPostsAsync();
         Task<List<GetUserDto>> GetUnverifiedModeratorsAsync();
         Task<List<GetPostDto>> GetVerifiedPostsAsync();

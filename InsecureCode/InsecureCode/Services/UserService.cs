@@ -29,13 +29,10 @@ namespace InsecureCode.Services
             await _postDbProvider.AddPostAsync(post);
         }
 
-        public async Task DeleteUserAsync(IdDto idDto, int userId)
+        public async Task DeleteUserAsync(IdDto idDto)
         {
             User user = await _userDbProvider.FindUserByIdAsync(idDto.Id) ??
                 throw new BadRequestException("This user doesn't exists.");
-
-            if (user.Id == userId)
-                throw new BadRequestException("You cannot delete your own user account.");
 
             await _userDbProvider.DeleteUserAsync(user.Id);
         }
@@ -78,9 +75,6 @@ namespace InsecureCode.Services
 
             User user = await _userDbProvider.FindUserByIdAsync(userId) ??
                 throw new BadRequestException("User with this ID doesn't exist.");
-
-            if (user.UserRole == EUserRole.MODERATOR && user.ModeratorVerifiedAt == null)
-                throw new BadRequestException("You need to be verified to verify a post.");
 
             post.MessageVerified = true;
 
