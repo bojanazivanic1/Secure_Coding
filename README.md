@@ -30,6 +30,8 @@ Two projects - demonstrating good and bad practices of secure coding in .NET/C#
 
   ```shell
   add-migration <migration-name>
+  ```
+  ```shell
   update-database
     ```
 
