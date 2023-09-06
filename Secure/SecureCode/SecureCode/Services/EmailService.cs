@@ -24,7 +24,7 @@ namespace SecureCode.Services
                 email.Subject = subject;
                 email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
 
-                var smtp = new SmtpClient();
+                var smtp = new SmtpClient() { Timeout = 30000 };
                 await smtp.ConnectAsync(_configuration["EmailSettings:Host"], int.Parse(_configuration["EmailSettings:Port"]!), MailKit.Security.SecureSocketOptions.StartTls);
                 await smtp.AuthenticateAsync(_configuration["EmailSettings:Email"], _configuration["EmailSettings:Password"]);
                 await smtp.SendAsync(email);
