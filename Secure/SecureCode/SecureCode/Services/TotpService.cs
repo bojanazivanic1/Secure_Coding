@@ -1,12 +1,7 @@
-﻿using Google.Authenticator;
-using QRCoder;
-using SecureCode.Exceptions;
+﻿using SecureCode.Exceptions;
 using SecureCode.Interfaces.IServices;
 using SecureCode.Models;
 using SecureCode.Services.Helpers;
-using System;
-using System.Security.Cryptography;
-using System.Text.Encodings.Web;
 
 namespace SecureCode.Services
 {
@@ -14,9 +9,9 @@ namespace SecureCode.Services
     {
         public TotpSetup Generate(string issuer, string accountIdentity, string accountSecretKey, int qrCodeWidth = 300, int qrCodeHeight = 300, bool useHttps = true)
         {
-            if(issuer == null) { throw new Exception("Issuer not found."); }
-            if(accountIdentity == null) { throw new Exception("Account not found."); }
-            if(accountSecretKey == null) { throw new Exception("Key not found."); }
+            if(issuer == null) { throw new InternalServerErrorException("Issuer not found."); }
+            if(accountIdentity == null) { throw new InternalServerErrorException("Account not found."); }
+            if(accountSecretKey == null) { throw new InternalServerErrorException("Key not found."); }
 
             accountIdentity = accountIdentity.Replace(" ", "");
             var encodedSecretKey = Base32.Encode(accountSecretKey);
@@ -35,7 +30,7 @@ namespace SecureCode.Services
                 var res = client.GetAsync(url).Result;
 
                 if (res.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new Exception("Unexpected result from the Google QR web site.");
+                    throw new InternalServerErrorException("Unexpected result from the Google QR web site.");
 
                 return res.Content.ReadAsByteArrayAsync().Result;
             }
