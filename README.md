@@ -49,6 +49,17 @@ If you need to change the port where the server runs, please follow these steps:
 
 5. In the `.env` file, look for the `VITE_LINK` string, and update it with the same port number as in the `lunchSettings.json` file.
 
+## Runnig
+
+### 1. Backend
+- In Visual Studio, click the `Start` button (or press `F5`) to initiate the backend server.
+
+### Frontend
+- Open the terminal in the folder containing the frontend project.
+- Run the following command to start the frontend application:
+    ```shell
+  npm run dev
+    ```
 
 ## Usage of SecureCode
 
