@@ -26,14 +26,14 @@ Two projects - demonstrating good and bad practices of secure coding in .NET/C#
 
 - Create a server in SSMS named `(localdb)\MSSQLLocalDB` or change the server name in the connection string in the `appsettings.json` file.
 - In the connection string, you can also change the name of your database before performing migrations.
-- In the Package Manager Console within Visual Studio, enter the following commands to create migrations and tables in the database:
+- In the case of `secure`: In the Package Manager Console within Visual Studio, enter the following commands to create migrations and tables in the database:
 
   ```shell
   add-migration <migration-name>
-  ```
-  ```shell
   update-database
     ```
+- In the case of `insecure`: Execute the queries from `create-tables.sql` on the database in SSMS.
+
 
 ### 2. Port Configuration
 
