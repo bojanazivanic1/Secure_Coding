@@ -164,8 +164,8 @@ namespace SecureCode.Services
             try
             {
                 string subject = "Authentication Code";
-                string body = $"Your 2FA code is: {code}";
-
+                string body = $"<html><body><h3>Your 2FA code is:</h3><h1>{code}</h1></body></html>";
+                
                 await _emailService!.SendEmail(email, subject, body);
                 return true;
             }

@@ -22,7 +22,7 @@ namespace SecureCode.Services
                 email.From.Add(new MailboxAddress(_configuration["EmailSettings:Name"], _configuration["EmailSettings:Email"]));
                 email.To.Add(MailboxAddress.Parse(receiver));
                 email.Subject = subject;
-                email.Body = new TextPart(MimeKit.Text.TextFormat.Plain) { Text = body };
+                email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
 
                 var smtp = new SmtpClient();
                 await smtp.ConnectAsync(_configuration["EmailSettings:Host"], int.Parse(_configuration["EmailSettings:Port"]!), MailKit.Security.SecureSocketOptions.StartTls);
