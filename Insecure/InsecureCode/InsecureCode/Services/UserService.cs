@@ -29,11 +29,12 @@ namespace InsecureCode.Services
             await _postDbProvider.AddPostAsync(post);
         }
 
-        public async Task DeleteUserAsync(int id)
+        public async Task DeleteUserAsync(int id, int userId)
         {
+            if(await _userDbProvider.FindUserByIdAsync(userId) == null)
+                throw new BadRequestException("Error with id in token. Logout and login again");
             User user = await _userDbProvider.FindUserByIdAsync(id) ??
                 throw new BadRequestException("This user doesn't exists.");
-
             await _userDbProvider.DeleteUserAsync(user.Id);
         }
 
@@ -73,7 +74,7 @@ namespace InsecureCode.Services
             Post post = await _postDbProvider.FindPostByIdAsync(idDto.Id) ??
                 throw new BadRequestException("Post with this ID doesn't exist.");
 
-            User user = await _userDbProvider.FindUserByIdAsync(userId) ??
+            if (await _userDbProvider.FindUserByIdAsync(userId) == null)
                 throw new BadRequestException("User with this ID doesn't exist.");
 
             post.MessageVerified = true;

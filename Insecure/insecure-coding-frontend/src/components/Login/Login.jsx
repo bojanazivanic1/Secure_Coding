@@ -38,7 +38,6 @@ const Login = () => {
         <Card component="form" >
             <CardContent>
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.email}
                     name="email"
@@ -47,7 +46,6 @@ const Login = () => {
                     onChange={changeHandler}
                 />
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.password}
                     name="password"

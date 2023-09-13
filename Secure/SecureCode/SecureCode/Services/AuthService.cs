@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Google.Authenticator;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Security.Application;
 using SecureCode.DTO;
@@ -22,6 +20,10 @@ namespace SecureCode.Services
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+
+        private Dictionary<string, int> ResetPasswordRequestCount = new Dictionary<string, int>();
+        private int MaxResetPasswordRequests = 3; 
+        private TimeSpan ResetPasswordRequestTimeout = TimeSpan.FromMinutes(1);
 
         public AuthService(IConfiguration configuration, 
                             IMapper mapper, 
@@ -49,6 +51,7 @@ namespace SecureCode.Services
             user.Name = Sanitizer.GetSafeHtmlFragment(user.Name);
 
             user.Salt = BCrypt.Net.BCrypt.GenerateSalt();
+
             user.Password = CreatePasswordHash(registerUserDto.Password!, user.Salt);
             user.VerificatonCode = Math.Abs(Guid.NewGuid().GetHashCode()).ToString().Substring(0, 6);
             user.TotpSecretKey = GenerateRandomKey();
@@ -108,6 +111,26 @@ namespace SecureCode.Services
             User? user = await _unitOfWork.Users.Get(x => x.Email == emailDto.Email) ??
                 throw new BadRequestException("User not found.");
 
+            if (ResetPasswordRequestCount.ContainsKey(user.Id.ToString()) &&
+                ResetPasswordRequestCount[user.Id.ToString()] >= MaxResetPasswordRequests)
+            {
+                throw new BadRequestException("You have reached the maximum limit for password reset requests.");
+            }
+
+            if (ResetPasswordRequestCount.ContainsKey(user.Id.ToString()))
+            {
+                ResetPasswordRequestCount[user.Id.ToString()]++;
+            }
+            else
+            {
+                ResetPasswordRequestCount[user.Id.ToString()] = 1;
+                var expirationTime = DateTime.Now.Add(ResetPasswordRequestTimeout);
+                Task.Delay((int)ResetPasswordRequestTimeout.TotalMilliseconds).ContinueWith(_ =>
+                {
+                    ResetPasswordRequestCount.Remove(user.Id.ToString());
+                });
+            }
+
             return _totpService!.Generate("Sec-password", user.Email!, user.TotpSecretKey);
         }
 
@@ -144,10 +167,8 @@ namespace SecureCode.Services
                 new Claim("Email", user.Email!),
                 new Claim(ClaimTypes.Role, user.UserRole.ToString()!),
             };
-
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
                 _configuration.GetSection("JwtSettings:Token").Value!));
-
             var token = new JwtSecurityToken(
                 issuer: _configuration["JwtSettings:Issuer"],
                 audience: _configuration["JwtSettings:Audience"],
@@ -155,7 +176,6 @@ namespace SecureCode.Services
                 expires: DateTime.Now.AddHours(1),
                 signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature)
                 );
-
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 

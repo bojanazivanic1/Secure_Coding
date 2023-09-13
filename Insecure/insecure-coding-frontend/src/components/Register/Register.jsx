@@ -22,14 +22,14 @@ const Register = () => {
 
     const submitHandler = async (e) => {
         e.preventDefault();
-
+/*
         for (let key in data) {
             if(data[key] === "") {
                 toast.warning("Please fill all fields!");
                 return;
             }
         }
-        
+    */    
         await register(data)
             .then(() => navigate("/login"));      
     };
@@ -38,7 +38,6 @@ const Register = () => {
         <Card component="form">
             <CardContent>
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.name}
                     name="name"
@@ -47,7 +46,6 @@ const Register = () => {
                     onChange={changeHandler}
                 />
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.email}
                     name="email"
@@ -56,7 +54,6 @@ const Register = () => {
                     onChange={changeHandler}
                 />
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.password}
                     name="password"
@@ -65,7 +62,6 @@ const Register = () => {
                     onChange={changeHandler}
                 />
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.confirmPassword}
                     name="confirmPassword"

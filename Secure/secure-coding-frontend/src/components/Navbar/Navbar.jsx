@@ -1,12 +1,23 @@
-import { AppBar, Box, Button, Container, Toolbar, useTheme } from "@mui/material";
-import { useContext } from "react";
+import { AppBar, Box, Button, Container, Toolbar } from "@mui/material";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/auth-context";
 import { logout } from "../../services/authService";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { getJoke } from "../../services/userService";
 
 const Navbar = () => {
     const authContext = useContext(AuthContext);
     const navigate = useNavigate();
+    const [joke, setJoke] = useState("");
+
+    useEffect(() => {
+        getJoke()
+            .then((res) => {
+                if(res != null) {
+                    setJoke(res);
+            }
+        })
+    }, []);
 
     const logoutHandler = () => {
         logout();
@@ -19,6 +30,9 @@ const Navbar = () => {
     return (
         <AppBar sx={{ backgroundColor: "grey" }}>
             <Container>
+                {joke}
+            </Container>
+            <Container>                
                 <Toolbar>
                     <Box sx={{ flexGrow: 1 }} />
                     <Box>

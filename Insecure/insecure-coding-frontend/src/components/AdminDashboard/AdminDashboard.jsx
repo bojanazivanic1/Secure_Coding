@@ -86,7 +86,6 @@ const AdminDashboard = () => {
                         <CardContent>
                             <Typography variant="h4">Delete User</Typography>
                             <TextField
-                                required
                                 sx={{ marginBottom: "20px", width: "100%" }}
                                 value={id}
                                 name="Id"

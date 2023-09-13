@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,17 @@ builder.Services.AddSwaggerGen(c =>
                     });
 });
 
+//user secrets
+if (builder.Environment.IsDevelopment())
+{
+    var config = new ConfigurationBuilder()
+        .SetBasePath(builder.Environment.ContentRootPath)
+        .AddUserSecrets<Program>()
+        .Build();
+
+    builder.Configuration.AddConfiguration(config);
+}
+
 //database
 builder.Services.AddDbContext<SecureDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SecureDbContext")));
@@ -66,6 +78,12 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITotpService, TotpService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ExceptionMiddleware>();
+
+//jokes
+builder.Services.AddHttpClient<IJokeService, JokeService>(client =>
+{
+    client.BaseAddress = new Uri("https://official-joke-api.appspot.com/");
+});
 
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>
@@ -86,7 +104,9 @@ builder.Services.AddCors(o =>
 {
     o.AddPolicy("cors", p =>
     {
-        p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        p.WithOrigins("http://localhost:5173")
+        .WithMethods("GET", "POST", "PUT", "DELETE")
+        .WithHeaders("Content-Type", "Authorization");
     });
 });
 
@@ -111,6 +131,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+//rate limit
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(options =>
+{
+    options.GeneralRules = new List<RateLimitRule>
+    {
+        new RateLimitRule { Endpoint = "*", Limit = 100, Period = "1m" }
+    };
+});
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -123,20 +157,20 @@ if (app.Environment.IsDevelopment())
 //csp
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self';");
+    context.Response.Headers.Add("Content-Security-Policy",
+                                    "default-src 'self';" +
+                                    "script-src 'self';" +
+                                    "style-src 'self';");
     await next();
 });
 
 app.UseHttpsRedirection();
 app.UseCors("cors");
-
 app.UseRouting();
-
+app.UseIpRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.UseMiddleware<ExceptionMiddleware>();
-
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();

@@ -54,7 +54,6 @@ const ContributorDashboard = () => {
                 <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography variant="h6">Add Post</Typography>
                     <TextField 
-                        required
                         sx={{ marginBottom: "10px", width: "100%" }}
                         value={message}
                         name="message"

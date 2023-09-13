@@ -1,4 +1,3 @@
-import jwtDecode from "jwt-decode";
 import api from "../api/api";
 import { throwWarning } from "../helpers/helpers";
 
@@ -16,7 +15,7 @@ export const register = async (data) => {
 
 export const confirmEmail = async (data) => {
     try {
-        await api.post('auth/confirm-email', data,
+        await api.post("auth/confirm-email", data,
         {
             headers: { "Content-Type": "application/json" }
         });

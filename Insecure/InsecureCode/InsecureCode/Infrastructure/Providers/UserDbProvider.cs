@@ -15,7 +15,15 @@ namespace InsecureCode.Infrastructure.Providers
 
         public async Task<bool> AddUserAsync(User newUser)
         {
-            string query = "INSERT INTO Users (Name, Email, Password, UserRole, ModeratorVerifiedAt) VALUES ('" + newUser.Name + "', '" + newUser.Email + "', '" + newUser.Password + "', '" + newUser.UserRole.ToString() + "', " + (newUser.ModeratorVerifiedAt != null ? "'" + newUser.ModeratorVerifiedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" : "NULL") + ")";
+            string query = "INSERT INTO Users (Name, Email, Password, UserRole, ModeratorVerifiedAt) VALUES (" +
+               "'" + newUser.Name + "', " +
+               "'" + newUser.Email + "', " +
+               "'" + newUser.Password + "', " +
+               "'" + newUser.UserRole.ToString() + "', " +
+               (newUser.ModeratorVerifiedAt != null 
+               ? "'" + newUser.ModeratorVerifiedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") + "'" 
+               : "NULL") + ")";
+
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -31,7 +39,16 @@ namespace InsecureCode.Infrastructure.Providers
 
         public async Task<bool> UpdateUserAsync(User user)
         {
-            string query = "UPDATE Users SET Name = '" + user.Name + "', Email = '" + user.Email + "', Password = '" + user.Password + "', UserRole = '" + user.UserRole + "', ModeratorVerifiedAt = " + (user.ModeratorVerifiedAt != null ? "'" + user.ModeratorVerifiedAt.ToString() + "'" : "NULL") + " WHERE Id = " + user.Id;
+            string query = "UPDATE Users SET " +
+               "Name = '" + user.Name + "', " +
+               "Email = '" + user.Email + "', " +
+               "Password = '" + user.Password + "', " +
+               "UserRole = '" + user.UserRole + "', " +
+               "ModeratorVerifiedAt = " + (user.ModeratorVerifiedAt != null 
+                                        ? "'" + user.ModeratorVerifiedAt.ToString() + "'"
+                                        : "NULL") + " " +
+               "WHERE Id = " + user.Id;
+
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -48,18 +65,15 @@ namespace InsecureCode.Infrastructure.Providers
         public async Task<User?> FindUserByEmailAsync(string email)
         {
             string query = "SELECT * FROM Users WHERE Email = '" + email + "'";
-
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
                         if (!reader.Read())
                             return null;
-
                         User user = new User
                         {
                             Id = (int)reader["Id"],
@@ -67,9 +81,10 @@ namespace InsecureCode.Infrastructure.Providers
                             Email = (string)reader["Email"],
                             Password = (string)reader["Password"],
                             UserRole = (EUserRole)Enum.Parse(typeof(EUserRole), (string)reader["UserRole"]),
-                            ModeratorVerifiedAt = reader["ModeratorVerifiedAt"] != DBNull.Value ? (DateTime)reader["ModeratorVerifiedAt"] : null
+                            ModeratorVerifiedAt = reader["ModeratorVerifiedAt"] != DBNull.Value 
+                                                ? (DateTime)reader["ModeratorVerifiedAt"] 
+                                                : null
                         };
-
                         return user;
                     }
                 }

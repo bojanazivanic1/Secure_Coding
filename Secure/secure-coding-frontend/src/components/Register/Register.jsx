@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../../services/authService"; 
-import { Button, Card, Select, MenuItem, TextField, Link, Typography, CardContent } from "@mui/material";
+import { Button, Card, Select, MenuItem, TextField, Link, Typography, CardContent, Checkbox, FormControlLabel, FormGroup } from "@mui/material";
 import HowToReg from '@mui/icons-material/HowToReg';
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
@@ -12,30 +12,37 @@ const Register = () => {
         email: "",
         password: "",
         confirmPassword: "",
-        userRole: 2
+        userRole: 2,
     });
+    const [isConsentChecked, setIsConsentChecked] = useState(false); // Dodatno stanje za praćenje čekboksa
     const navigate = useNavigate();
 
     const changeHandler = (e) => {
         setData({ ...data, [e.target.name]: e.target.value });
     };
 
+    const consentHandler = (e) => {
+        setIsConsentChecked(e.target.checked);
+    };
+
     const submitHandler = async (e) => {
         e.preventDefault();
 
         for (let key in data) {
-            if(data[key] === "") {
+            if (data[key] === "") {
                 toast.warning("Please fill all fields!");
                 return;
             }
         }
 
-        sessionStorage.setItem("email", data.email);
-        console.log(data.email)
-        console.log(sessionStorage.getItem('email'))
+        if (!isConsentChecked) {
+            toast.warning("Please give consent to use your personal data!");
+            return;
+        }
 
-        await register(data)
-            .then(() => navigate("/confirm-email"));      
+        sessionStorage.setItem("email", data.email);
+
+        await register(data).then(() => navigate("/confirm-email"));
     };
 
     return (
@@ -87,6 +94,17 @@ const Register = () => {
                     <MenuItem value={1}>Moderator</MenuItem>
                     <MenuItem value={2}>Contributor</MenuItem>
                 </Select>
+                <FormGroup row>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={isConsentChecked}
+                                onChange={consentHandler}
+                            />
+                        }
+                        label="I agree to the use of my personal data for the purposes of this application."
+                    />
+                </FormGroup>
                 <Button
                     variant="contained"
                     type="submit"

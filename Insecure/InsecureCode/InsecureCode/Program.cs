@@ -55,6 +55,12 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserDbProvider, UserDbProvider>();
 builder.Services.AddScoped<IPostDbProvider, PostDbProvider>();
 
+//jokes
+builder.Services.AddHttpClient<IJokeService, JokeService>(client =>
+{
+    client.BaseAddress = new Uri("https://official-joke-api.appspot.com/");
+});
+
 //mapper
 var mapperConfig = new MapperConfiguration(mc =>
 {
@@ -82,14 +88,13 @@ builder.Services.AddAuthentication(options =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey
-        (Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Token"])),
-        ValidateIssuer = true,
-        ValidateAudience = true,
+        ValidIssuer = null,
+        ValidAudience = null,
+        IssuerSigningKey = null,
+        ValidateIssuer = false,
+        ValidateAudience = false,
         ValidateLifetime = false,
-        ValidateIssuerSigningKey = true
+        ValidateIssuerSigningKey = false
     };
 });
 

@@ -57,7 +57,6 @@ const ResetPassword = () => {
         <Card component="form">
             <CardContent>
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.code}
                     name="code" 
@@ -66,7 +65,6 @@ const ResetPassword = () => {
                     onChange={changeHandler}
                 />
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.password}
                     name="password"
@@ -75,7 +73,6 @@ const ResetPassword = () => {
                     onChange={changeHandler}
                 />
                 <TextField 
-                    required
                     sx={{ marginBottom: "10px", width: "100%" }}
                     value={data.confirmPassword}
                     name="confirmPassword"

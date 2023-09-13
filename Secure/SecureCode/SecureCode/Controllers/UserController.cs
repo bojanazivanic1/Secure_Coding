@@ -15,12 +15,15 @@ namespace SecureCode.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IJokeService _jokeService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IJokeService jokeService)
         {
             _userService = userService;
+            _jokeService = jokeService;
         }
 
+        [TorAndProxyFilter]
         [Authorize(Roles = "CONTRIBUTOR")]
         [HttpPost("add-post")]
         public async Task<ActionResult> AddPostAsync(AddPostDto request)
@@ -59,7 +62,7 @@ namespace SecureCode.Controllers
 
         [Authorize(Roles = "ADMIN")]
         [HttpPost("verify-moderator")]
-        public async Task<ActionResult> VerifyMderatorAsync(IdDto request)
+        public async Task<ActionResult> VerifyModeratorAsync(IdDto request)
         {
             if (!int.TryParse(User.Claims.First(c => c.Type == "Id").Value, out int userId))
                 throw new BadRequestException("Bad ID. Logout and login.");
@@ -103,6 +106,14 @@ namespace SecureCode.Controllers
             await _userService.DeleteUserAsync(id, userId);
 
             return Ok();
+        }
+
+        [TorAndProxyFilter]
+        [HttpGet("get-joke")]
+        public async Task<ActionResult> GetJokeAsync()
+        {
+            var joke = await _jokeService.GetRandomJokeAsync();
+            return Ok(joke);
         }
 
 

@@ -75,3 +75,13 @@ export const deleteUser = async (data) => {
         return Promise.reject(e);
     }
 };
+
+export const getJoke = async (data) => {
+    try {
+        const res = await api.get("user/get-joke", data);
+        return res.data;
+    } catch (e) {
+        throwWarning(e);
+        return Promise.reject(e);
+    }
+};
