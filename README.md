@@ -64,24 +64,23 @@ If you need to change the port where the server runs, please follow these steps:
 ## Usage of SecureCode
 
 ### 1. Register
-- Enter data in the form and click the button to save it to the database.
-- Proceed to the next page for entering the code.
-- The account cannot be used (or logged in) until the email address is verified.
-- A code will be sent to the email address, which should be entered in the designated field, and by clicking the button, you proceed to the login page.
-- The profile can then be used.
+- Enter the data in the form and click the button to save it in the database.
+- Go to the next page to enter the code.
+- A code will be sent to the e-mail address, which should be entered in the field provided for it, and by clicking on the button, you will go to the page for entering the one-time generated code.
+- On that page there is a QR code that needs to be scanned in the Google Authenticator application or, alternatively, the key must be entered.
+- Enter the generated code and click the button within 30 seconds of generation (after 30 seconds a new one is generated and the old one is no longer valid).
+- The account cannot be used (or logged in) until the email address and TOTP code are confirmed.
 
-### 2. Log In
-- Enter the required data and click the button to proceed to the confirmation page.
-- On that page, there is a QR code that should be scanned within the Google Authenticator app or the key should be entered alternatively.
-- Enter the generated code and click the button within 30 seconds of generation (after 30 seconds, a new one is generated, and the old one is no longer valid).
-- After that, you will proceed to the dashboard page, and the user is logged in.
-- In the case that the user is a moderator, they can only read but not execute actions until an admin approves their profile.
+### 2. Sign up
+- Enter the required information and click the button to go to the confirmation page.
+- On that page there is a field for entering a one-time generated code in the Google Authenticator application.
+- After confirming the code, you will go to the dashboard page, and the user is logged in.
+- In case the user is a moderator, he can only read, but not perform actions until the administrator approves his profile.
 
-### 3. Reset Password
-- Enter the email address, and by clicking the button, you proceed to the next page.
-- A QR code and key are displayed, which are used in the Google Authenticator to generate a code.
-- Enter the received code and a new password in the form.
-- By clicking the button, the password is changed, and you proceed to the login page.
+### 3. Reset your password
+- Enter your email address and click the button to go to the next page.
+- Enter the generated code and new password in the form.
+- By clicking the button, the password is changed and you go to the login page.
 
 ### 4. Contributor's Functionalities
 - View approved posts.
