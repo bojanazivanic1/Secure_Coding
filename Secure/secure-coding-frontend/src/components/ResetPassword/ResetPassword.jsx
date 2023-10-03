@@ -1,15 +1,13 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
 import { Button, Card, CardContent, TextField } from "@mui/material";
 import LockResetIcon from '@mui/icons-material/LockReset';
-import { QrContext } from "../../contexts/qr-context";
 import { toast } from "react-toastify";
 
 const ResetPassword = () => {
     const [email, setEmail] = useState("");
     const navigate = useNavigate();
-    const qrContext = useContext(QrContext);
 
     const changeHandler = (e) => {
         setEmail(e.target.value);
@@ -26,13 +24,9 @@ const ResetPassword = () => {
         await resetPassword({
             email: email
         })
-            .then((res) => {
-                qrContext.setData({
-                    key: res.manualSetupKey,
-                    qr: res.qrCodeImage,
-                    email: email
-                });
+            .then(res => {
                 navigate("/confirm-password");
+                sessionStorage.setItem("email", email);
             });
     };
 

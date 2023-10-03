@@ -15,7 +15,20 @@ export const register = async (data) => {
 
 export const confirmEmail = async (data) => {
     try {
-        await api.post("auth/confirm-email", data,
+        const res = await api.post("auth/confirm-email", data,
+        {
+            headers: { "Content-Type": "application/json" }
+        });
+        return res.data;
+    } catch (e) {
+        throwWarning(e);
+        return Promise.reject(e);
+    }
+};
+
+export const confirmTotp = async (data) => {
+    try {
+        await api.post("auth/confirm-totp", data,
         {
             headers: { "Content-Type": "application/json" }
         });
@@ -27,11 +40,10 @@ export const confirmEmail = async (data) => {
 
 export const login = async (data) => {
     try {
-        const res = await api.post("auth/login", data,
+        await api.post("auth/login", data,
         {
             headers: { "Content-Type": "application/json" }
         });
-        return res.data;
     } catch (e) {
         throwWarning(e);
         return Promise.reject(e);
@@ -53,11 +65,10 @@ export const confirmLogin = async (data) => {
 
 export const resetPassword = async (data) => {
     try {
-        const res = await api.post("auth/reset-password", data,
+        await api.post("auth/reset-password", data,
         {
             headers: { "Content-Type": "application/json" }
         });
-        return res.data;
     } catch (e) {
         throwWarning(e);
         return Promise.reject(e);

@@ -1,9 +1,8 @@
 import { Button, Card, CardContent, CardMedia, TextField, Typography } from "@mui/material";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { confirmPassword } from "../../services/authService";
-import { QrContext } from "../../contexts/qr-context";
 import { toast } from "react-toastify";
 
 const ConfirmPassword = () => {
@@ -13,7 +12,6 @@ const ConfirmPassword = () => {
         confirmPassword: ""
     });
     const navigate = useNavigate();
-    const qrContext = useContext(QrContext);
 
     const changeHandler = (e) => {
         setData({ ...data, [e.target.name]:e.target.value });
@@ -30,33 +28,18 @@ const ConfirmPassword = () => {
         }
         
         await confirmPassword({
-            email: qrContext.email,
+            email: sessionStorage.getItem("email"),
             code: data.code,
             password: data.password,
             confirmPassword: data.confirmPassword
         })
-            .then(() => navigate("/login"));
+            .then(() => {
+                navigate("/login");
+                sessionStorage.removeItem("email");
+            });
     };
 
     return (
-        <>
-        <Card sx={{ marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <CardContent>
-                <Typography variant="h6" sx={{ marginBottom: '10px' }}>
-                    Scan the QR code using Google Authenticator
-                </Typography>
-                <CardMedia
-                    component="img"
-                    image={qrContext.qr}
-                    alt="QR Code"
-                    sx={{ marginBottom: '20px', maxWidth: '200px', margin: '0 auto' }}
-                />
-                <Typography variant="body2" sx={{ marginBottom: '10px' }}>
-                    Or enter the key: <strong>{qrContext.key}</strong>
-                </Typography>
-            </CardContent>
-        </Card>
-
         <Card component="form">
             <CardContent>
                 <TextField 
@@ -65,7 +48,7 @@ const ConfirmPassword = () => {
                     value={data.code}
                     name="code" 
                     type="text"
-                    label="Code"
+                    label="TOTP Code"
                     onChange={changeHandler}
                 />
                 <TextField 
@@ -95,7 +78,6 @@ const ConfirmPassword = () => {
                 </Button>
             </CardContent>
         </Card>
-        </>
     );
 };
 

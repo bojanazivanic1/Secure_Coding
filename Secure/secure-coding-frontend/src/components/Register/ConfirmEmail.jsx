@@ -1,13 +1,15 @@
 import { Button, Card, CardContent, TextField } from "@mui/material";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { confirmEmail } from "../../services/authService";
 import { toast } from "react-toastify";
+import { QrContext } from "../../contexts/qr-context";
 
 const ConfirmEmail = () => {
     const [code, setCode] = useState("");
     const navigate = useNavigate();
+    const qrContext = useContext(QrContext);
 
     const changeHandler = (e) => {
         setCode(e.target.value);
@@ -25,8 +27,13 @@ const ConfirmEmail = () => {
             code: code,
             email: sessionStorage.getItem("email")
         })
-            .then(() => {
-                navigate("/");
+            .then((res) => {
+                qrContext.setData({ 
+                    key: res.manualSetupKey,
+                    qr: res.qrCodeImage,
+                    email: sessionStorage.getItem("email")
+                });
+                navigate("/confirm-totp");
                 sessionStorage.removeItem("email");
             });
     };

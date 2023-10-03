@@ -29,7 +29,15 @@ namespace SecureCode.Controllers
         [HttpPost("confirm-email")]
         public async Task<ActionResult> ConfirmEmailAsync(CodeDto request)
         {
-            await authService.ConfirmEmailAsync(request);
+            var totp = await authService.ConfirmEmailAsync(request);
+            return Ok(totp);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("confirm-totp")]
+        public async Task<ActionResult> ConfirmTotpAsync(CodeDto request)
+        {
+            await authService.ConfirmTotpAsync(request);
             return Ok();
         }
 
@@ -37,8 +45,8 @@ namespace SecureCode.Controllers
         [HttpPost("login")]
         public async Task<ActionResult> LoginAsync(LoginUserDto request)
         {
-            TotpSetup totp = await authService.LoginUserAsync(request);
-            return Ok(totp);
+            await authService.LoginUserAsync(request);
+            return Ok();
         }
 
         [AllowAnonymous]
@@ -53,8 +61,8 @@ namespace SecureCode.Controllers
         [HttpPost("reset-password")]
         public async Task<ActionResult> ResetPasswordRequestAsync(EmailDto request)
         {
-            TotpSetup totp = await authService.ResetPasswordRequestAsync(request);
-            return Ok(totp);
+            await authService.ResetPasswordRequestAsync(request);
+            return Ok();
         }
 
         [AllowAnonymous]

@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 const Dashboard = lazy(() => import("../components/Dashboard/Dashboard"));
 const Register = lazy(() => import("../components/Register/Register"));
 const ConfirmEmail = lazy(() => import("../components/Register/ConfirmEmail"));
+const ConfirmTtop = lazy(() => import("../components/Register/ConfirmTotp"));
 const Login = lazy(() => import("../components/Login/Login"));
 const ConfirmLogin = lazy(() => import("../components/Login/ConfirmLogin"));
 const ResetPassword = lazy(() => import("../components/ResetPassword/ResetPassword"));
@@ -18,6 +19,7 @@ const AppRouter = () => {
                 <Route path="/" element={ <ProtectedRoute component={ <Login /> } /> } />   
                 <Route path="/register" element={ <ProtectedRoute component={ <Register /> } /> } />   
                 <Route path="/confirm-email" element={ <ProtectedRoute component={ <ConfirmEmail /> } /> } />   
+                <Route path="/confirm-totp" element={ <ProtectedRoute component={ <ConfirmTtop /> } /> } />   
                 <Route path="/login" element={ <ProtectedRoute component={ <Login /> } /> } />   
                 <Route path="/confirm-login" element={ <ProtectedRoute component={ <ConfirmLogin /> } /> } />   
                 <Route path="/reset-password" element={ <ProtectedRoute component={ <ResetPassword /> } /> } />   

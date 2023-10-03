@@ -1,9 +1,8 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../../services/authService";
 import LoginIcon from '@mui/icons-material/Login';
 import { Button, Card, CardContent, TextField, Typography } from "@mui/material";
-import { QrContext } from "../../contexts/qr-context";
 import { toast } from "react-toastify";
 
 const Login = () => {
@@ -12,7 +11,6 @@ const Login = () => {
         password: ""
     });
     const navigate = useNavigate();
-    const qrContext = useContext(QrContext);
 
     const changeHandler = (e) => {
         setData({ ...data, [e.target.name]:e.target.value });
@@ -29,13 +27,9 @@ const Login = () => {
         }
 
         await login(data)
-            .then((res) => { 
-                qrContext.setData({ 
-                    key: res.manualSetupKey,
-                    qr: res.qrCodeImage,
-                    email: data.email
-                });
+            .then(() => {
                 navigate("/confirm-login");
+                sessionStorage.setItem("email", data.email);
             });
     };
 

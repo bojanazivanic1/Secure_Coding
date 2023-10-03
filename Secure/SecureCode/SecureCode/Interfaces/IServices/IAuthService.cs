@@ -7,10 +7,11 @@ namespace SecureCode.Interfaces.IServices
     public interface IAuthService
     {
         Task RegisterUserAsync(RegisterUserDto request);
-        Task ConfirmEmailAsync(CodeDto enteredCode);
-        Task<TotpSetup> ResetPasswordRequestAsync(EmailDto request);
+        Task<TotpSetup> ConfirmEmailAsync(CodeDto enteredCode);
+        Task ResetPasswordRequestAsync(EmailDto request);
         Task ResetPasswordConfirmAsync(ResetPasswordDto request);
-        Task<TotpSetup> LoginUserAsync(LoginUserDto request);
+        Task LoginUserAsync(LoginUserDto request);
         Task<string> LoginConfirmAsync(CodeDto codeDto);
+        Task ConfirmTotpAsync(CodeDto codeDto);
     }
 }

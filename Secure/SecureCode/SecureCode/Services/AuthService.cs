@@ -22,8 +22,9 @@ namespace SecureCode.Services
         private readonly IUnitOfWork _unitOfWork;
 
         private Dictionary<string, int> ResetPasswordRequestCount = new Dictionary<string, int>();
-        private int MaxResetPasswordRequests = 3; 
-        private TimeSpan ResetPasswordRequestTimeout = TimeSpan.FromMinutes(1);
+        private int MaxResetPasswordRequests = 1;
+        private TimeSpan ResetPasswordRequestTimeout = TimeSpan.FromMinutes(5);
+
 
         public AuthService(IConfiguration configuration, 
                             IMapper mapper, 
@@ -39,7 +40,7 @@ namespace SecureCode.Services
         }
 
         public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
-        {
+            {
             if (registerUserDto.UserRole == EUserRole.ADMIN)
                 throw new UnauthorizedException("You cannot register like admin.");
 
@@ -62,7 +63,7 @@ namespace SecureCode.Services
             await Send2FACodeByEmailAsync(user.Email!, user.VerificatonCode);
         }
 
-        public async Task ConfirmEmailAsync(CodeDto codeDto)
+        public async Task<TotpSetup> ConfirmEmailAsync(CodeDto codeDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email) ??
                 throw new BadRequestException("User doesn't exist.");
@@ -75,9 +76,22 @@ namespace SecureCode.Services
             user.VerifiedAt = DateTime.Now;
 
             await _unitOfWork.Save();
+
+            return _totpService!.Generate("Sec-login", user.Email!, user.TotpSecretKey);
         }
-        
-        public async Task<TotpSetup> LoginUserAsync(LoginUserDto loginUserDto)
+
+        public async Task ConfirmTotpAsync(CodeDto codeDto)
+        {
+            var user = await _unitOfWork.Users.Get(x => x.Email == codeDto.Email!) ??
+                throw new BadRequestException("User doesn't exist.");
+
+            if (!_totpService!.Validate(user.TotpSecretKey, int.Parse(codeDto.Code!)))
+            {
+                throw new BadRequestException("Code is not valid!");
+            }
+        }
+
+        public async Task LoginUserAsync(LoginUserDto loginUserDto)
         {
             User user = await _unitOfWork.Users.Get(x => x.Email == loginUserDto.Email) ??
                 throw new BadRequestException("User not found.");
@@ -91,8 +105,6 @@ namespace SecureCode.Services
             {
                 throw new UnauthorizedException("Not verified!");
             }
-
-            return _totpService!.Generate("Sec-login", user.Email!, user.TotpSecretKey);
         }
         public async Task<string> LoginConfirmAsync(CodeDto codeDto)
         {
@@ -106,32 +118,11 @@ namespace SecureCode.Services
 
             return CreateToken(user);
         }
-        public async Task<TotpSetup> ResetPasswordRequestAsync(EmailDto emailDto)
+
+        public async Task ResetPasswordRequestAsync(EmailDto emailDto)
         {
-            User? user = await _unitOfWork.Users.Get(x => x.Email == emailDto.Email) ??
+            User user = await _unitOfWork.Users.Get(x => x.Email == emailDto.Email) ??
                 throw new BadRequestException("User not found.");
-
-            if (ResetPasswordRequestCount.ContainsKey(user.Id.ToString()) &&
-                ResetPasswordRequestCount[user.Id.ToString()] >= MaxResetPasswordRequests)
-            {
-                throw new BadRequestException("You have reached the maximum limit for password reset requests.");
-            }
-
-            if (ResetPasswordRequestCount.ContainsKey(user.Id.ToString()))
-            {
-                ResetPasswordRequestCount[user.Id.ToString()]++;
-            }
-            else
-            {
-                ResetPasswordRequestCount[user.Id.ToString()] = 1;
-                var expirationTime = DateTime.Now.Add(ResetPasswordRequestTimeout);
-                Task.Delay((int)ResetPasswordRequestTimeout.TotalMilliseconds).ContinueWith(_ =>
-                {
-                    ResetPasswordRequestCount.Remove(user.Id.ToString());
-                });
-            }
-
-            return _totpService!.Generate("Sec-password", user.Email!, user.TotpSecretKey);
         }
 
         public async Task ResetPasswordConfirmAsync(ResetPasswordDto resetPasswordDto)
@@ -206,6 +197,5 @@ namespace SecureCode.Services
                 return new string(chars.ToArray());
             }
         }
-
     }
 }
