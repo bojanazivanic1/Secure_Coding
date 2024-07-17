@@ -1,6 +1,6 @@
 # Secure_Coding
 
-Two projects - demonstrating good and bad practices of secure coding in .NET/C#
+Two projects - demonstrating good and bad practices of secure coding in .NET/C# according to the OWASP Top 10 list for 2023
 
 ## Installation
 
